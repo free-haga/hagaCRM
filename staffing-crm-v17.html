@@ -1,0 +1,3021 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>HireCRM v8 — Supabase対応</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@600;700;800&display=swap');
+:root{
+  --bg:#f5f4f0;--surface:#fff;--s2:#f0efe9;--s3:#e8e6de;
+  --border:#e2e0d6;--border2:#ccc9bc;
+  --sidebar:#16171c;
+  --accent:#1d6ef5;--acl:#eef3ff;--acd:#1455cc;
+  --green:#16a34a;--gl:#f0fdf4;
+  --amber:#d97706;--al:#fffbeb;
+  --red:#dc2626;--rl:#fef2f2;
+  --purple:#7c3aed;--pl:#f5f3ff;
+  --teal:#0f766e;--tl:#ccfbf1;
+  --orange:#ea580c;--ol:#fff7ed;
+  --gray:#6b7280;--grl:#f3f4f6;
+  --text:#111318;--t2:#6b7280;--t3:#9ca3af;
+  --font:'Noto Sans JP',sans-serif;--mono:'JetBrains Mono',monospace;--disp:'Outfit',sans-serif;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --shm:0 4px 20px rgba(0,0,0,.09);--shl:0 14px 44px rgba(0,0,0,.15);
+  --r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;font-size:14px}
+
+.sidebar{width:215px;min-height:100vh;background:var(--sidebar);display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.logo{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
+.logo-n{font-family:var(--disp);font-size:17px;font-weight:800;color:#fff;letter-spacing:-.4px}
+.logo-s{font-size:9px;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:1.4px;margin-top:2px}
+.nav{padding:10px 7px;flex:1;display:flex;flex-direction:column;gap:1px}
+.nl{font-size:9px;color:rgba(255,255,255,.18);text-transform:uppercase;letter-spacing:1.4px;padding:9px 9px 3px}
+.nb{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;transition:all .14s;border:none;background:transparent;width:100%;text-align:left}
+.nb:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.76)}
+.nb.active{background:rgba(255,255,255,.11);color:#fff}
+.ni{font-size:13px;width:16px;text-align:center;flex-shrink:0}
+.nbg{margin-left:auto;color:#fff;font-size:9px;font-family:var(--mono);padding:1px 5px;border-radius:6px;min-width:18px;text-align:center;background:var(--accent)}
+.nbg.am{background:var(--amber)}.nbg.rd{background:var(--red)}.nbg.tl{background:var(--teal)}.nbg.or{background:var(--orange)}
+
+.main{margin-left:215px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 22px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--sh)}
+.pt{font-family:var(--disp);font-size:15px;font-weight:700}
+.tba{display:flex;gap:7px;align-items:center}
+
+.btn{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:6px;font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;border:none;transition:all .13s;white-space:nowrap}
+.bp{background:var(--accent);color:#fff}.bp:hover{background:var(--acd)}
+.bg_{background:transparent;color:var(--t2);border:1px solid var(--border)}.bg_:hover{background:var(--s2);color:var(--text)}
+.bd{background:var(--rl);color:var(--red);border:1px solid #fca5a5}
+.bsm{padding:4px 9px;font-size:11px}.bxs{padding:2px 7px;font-size:10px}
+.b-stage{padding:3px 9px;border-radius:5px;font-size:11px;cursor:pointer;border:none;font-family:var(--font);transition:all .13s}
+
+.content{padding:18px 22px;flex:1}
+.page{display:none}.page.active{display:block}
+
+.sg{display:grid;gap:10px;margin-bottom:14px}
+.sg3{grid-template-columns:repeat(3,1fr)}.sg4{grid-template-columns:repeat(4,1fr)}.sg5{grid-template-columns:repeat(5,1fr)}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--ca,var(--accent))}
+.sl{font-size:9px;color:var(--t2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px}
+.sv{font-family:var(--disp);font-size:22px;font-weight:800;color:var(--text)}
+.ss{font-size:10px;color:var(--t3);margin-top:2px}
+
+.tb{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.sw{position:relative;min-width:160px;flex:1;max-width:280px}
+.sw input{width:100%;padding:7px 10px 7px 29px;border:1px solid var(--border);border-radius:7px;background:var(--surface);font-family:var(--font);font-size:12px;color:var(--text);transition:border-color .2s}
+.sw input:focus{outline:none;border-color:var(--accent)}
+.si{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:11px;pointer-events:none}
+.fs{padding:6px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface);font-family:var(--font);font-size:12px;color:var(--text);cursor:pointer}
+.fs:focus{outline:none;border-color:var(--accent)}
+.stb{padding:5px 9px;border:1px solid var(--border);border-radius:6px;background:var(--surface);font-family:var(--font);font-size:11px;color:var(--t2);cursor:pointer;transition:all .13s;display:flex;align-items:center;gap:3px}
+.stb.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:860px}
+thead th{background:var(--s2);padding:8px 10px;text-align:left;font-size:10px;color:var(--t2);text-transform:uppercase;letter-spacing:.7px;font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;cursor:pointer}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#f8f7ff}
+tbody tr.freed-row{background:#fff8f0}
+tbody tr.freed-row:hover{background:#fff0e0}
+tbody td{padding:8px 10px;font-size:12px;vertical-align:middle}
+.tdm{font-weight:500;font-size:13px}.tds{font-size:10px;color:var(--t2);margin-top:1px}
+.ra{display:flex;gap:3px;opacity:0;transition:opacity .13s}
+tbody tr:hover .ra{opacity:1}
+
+.bdg{display:inline-flex;align-items:center;padding:1px 7px;border-radius:20px;font-size:10px;font-family:var(--mono);font-weight:500;white-space:nowrap}
+.b-gr{background:var(--gl);color:var(--green);border:1px solid #bbf7d0}
+.b-bl{background:var(--acl);color:var(--accent);border:1px solid #bfdbfe}
+.b-am{background:var(--al);color:var(--amber);border:1px solid #fde68a}
+.b-rd{background:var(--rl);color:var(--red);border:1px solid #fca5a5}
+.b-gy{background:var(--grl);color:var(--gray);border:1px solid #e5e7eb}
+.b-pu{background:var(--pl);color:var(--purple);border:1px solid #ddd6fe}
+.b-tl{background:var(--tl);color:var(--teal);border:1px solid #99f6e4}
+.b-or{background:var(--ol);color:var(--orange);border:1px solid #fed7aa}
+
+.fr{display:flex;align-items:center;gap:4px;font-size:11px}
+.frd{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.fa .frd{background:var(--green)}.fa{color:var(--green)}
+.fw .frd{background:var(--amber)}.fw{color:var(--amber)}
+.fc .frd{background:var(--red)}.fc{color:var(--red)}
+.fn .frd{background:var(--t3)}.fn{color:var(--t3)}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.freed-badge{display:inline-flex;align-items:center;gap:3px;background:var(--ol);color:var(--orange);border:1px solid #fed7aa;border-radius:20px;font-size:10px;font-family:var(--mono);padding:1px 7px;animation:pulse 2s infinite}
+
+.av{border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--disp);flex-shrink:0}
+
+/* inline stage dropdown in table */
+.stage-sel{padding:2px 6px;border:1px solid var(--border);border-radius:5px;font-family:var(--font);font-size:11px;background:var(--surface);color:var(--text);cursor:pointer}
+.stage-sel:focus{outline:none;border-color:var(--accent)}
+
+/* quick-call mini form */
+.qcall-wrap{display:none;position:absolute;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shm);padding:12px;width:280px}
+.qcall-wrap.open{display:block}
+
+/* OVERLAY + DETAIL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.2);z-index:150;backdrop-filter:blur(1px)}
+.overlay.open{display:block}
+.detail{position:fixed;top:0;right:0;bottom:0;width:450px;background:var(--surface);border-left:1px solid var(--border);box-shadow:var(--shl);z-index:200;overflow-y:auto;display:none;flex-direction:column}
+.detail.open{display:flex;animation:slideIn .2s ease}
+@keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:none;opacity:1}}
+.dh{padding:15px 18px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;position:sticky;top:0;background:var(--surface);z-index:10}
+.dhi{flex:1;min-width:0}.dhn{font-family:var(--disp);font-size:15px;font-weight:700;margin-bottom:1px}.dhs{font-size:11px;color:var(--t2)}
+.dha{display:flex;gap:4px;flex-shrink:0}
+.ds{padding:13px 18px;border-bottom:1px solid var(--border)}.ds:last-child{border-bottom:none}
+.dst{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:9px;font-weight:500}
+.dr{display:flex;justify-content:space-between;align-items:flex-start;padding:3px 0;font-size:12px;gap:8px}
+.drl{color:var(--t2);flex-shrink:0}.drv{font-weight:500;text-align:right;word-break:break-all;font-size:12px}
+
+.tl{display:flex;flex-direction:column}
+.tli{display:flex;gap:8px;padding-bottom:13px}.tli:last-child{padding-bottom:0}
+.tll{display:flex;flex-direction:column;align-items:center;width:14px;flex-shrink:0}
+.tld{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px;border:2px solid var(--surface)}
+.tln_{width:2px;background:var(--border);flex:1;margin-top:2px}.tli:last-child .tln_{display:none}
+.tlb{flex:1}
+.tlnt{font-size:11px;color:var(--t2);line-height:1.5}.tlm{font-size:10px;color:var(--t3);font-family:var(--mono);margin-top:2px}
+
+.af{background:var(--s2);border-radius:8px;padding:11px;margin-bottom:12px}
+.atr{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+.atb{padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface);font-family:var(--font);font-size:11px;cursor:pointer;transition:all .13s;color:var(--t2)}
+.atb.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+.ani{width:100%;padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-family:var(--font);font-size:12px;color:var(--text);background:var(--surface);resize:vertical;min-height:48px}
+.ani:focus{outline:none;border-color:var(--accent)}
+.adi,.arsel{padding:5px 7px;border:1px solid var(--border);border-radius:5px;font-family:var(--font);font-size:11px;color:var(--text);background:var(--surface)}
+.adi:focus,.arsel:focus{outline:none;border-color:var(--accent)}
+
+/* MODAL */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.mo.open{display:flex}
+.modal{background:var(--surface);border-radius:13px;box-shadow:var(--shl);width:600px;max-width:96vw;max-height:92vh;overflow-y:auto;animation:mIn .17s ease}
+@keyframes mIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+.mh{padding:17px 22px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.mt{font-family:var(--disp);font-size:15px;font-weight:700}
+.mcl{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--t2)}
+.mcl:hover{background:var(--s2)}
+.mb{padding:18px 22px}.mf{padding:11px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:7px}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.ff{grid-column:1/-1}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px}
+.fg input,.fg select,.fg textarea{padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-family:var(--font);font-size:12px;color:var(--text);background:var(--surface);transition:border-color .2s;resize:vertical}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--accent)}
+.fg input.err{border-color:var(--red);background:var(--rl)}
+.dupe-alert{background:#fff7ed;border:1px solid #fed7aa;border-radius:7px;padding:8px 11px;margin-bottom:10px;font-size:11px;color:var(--amber);display:none;align-items:flex-start;gap:6px}
+.dupe-alert.show{display:flex}
+
+/* CP */
+.cpg{display:flex;flex-direction:column;gap:6px}
+.cpi{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--border);border-radius:7px;cursor:pointer;transition:all .13s}
+.cpi:hover,.cpi.sel{background:var(--acl);border-color:var(--accent)}
+
+/* DASHBOARD */
+.db-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:16px}
+.dbc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--sh)}
+.dbt{font-size:12px;font-weight:600;margin-bottom:12px;color:var(--text);display:flex;align-items:center;gap:5px}
+.bar-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.bar-label{font-size:10px;color:var(--t2);width:82px;flex-shrink:0;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-wrap{flex:1;background:var(--s2);border-radius:3px;height:16px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:6px;transition:width .5s ease}
+.bar-text{font-size:9px;font-family:var(--mono);color:#fff;white-space:nowrap}
+.bar-val{font-size:10px;font-family:var(--mono);color:var(--t2);width:22px;text-align:right;flex-shrink:0}
+.kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.kpi-mini{background:var(--s2);border-radius:7px;padding:10px;text-align:center}
+.kpi-mini .val{font-family:var(--disp);font-size:20px;font-weight:800;color:var(--text)}
+.kpi-mini .lbl{font-size:9px;color:var(--t2);margin-top:1px}
+.rep-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px}
+.rep-row:last-child{border-bottom:none}
+.share-banner{background:linear-gradient(135deg,#1a56e8,#5b21b6);border-radius:var(--r);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;color:#fff}
+.share-title{font-family:var(--disp);font-size:14px;font-weight:700;margin-bottom:2px}.share-sub{font-size:11px;opacity:.75}
+
+/* CONV RATE */
+.conv-bar{width:50px;height:5px;background:var(--s3);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:3px}
+.conv-fill{height:100%;border-radius:3px;background:var(--teal)}
+
+.memo-cell{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--t2);cursor:pointer}
+.memo-cell.expanded{white-space:normal;max-width:240px}
+
+.empty{padding:38px 20px;text-align:center;color:var(--t2)}
+.ei{font-size:28px;margin-bottom:7px}.et{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}.ed{font-size:11px}
+
+/* mini modal for quick call */
+.mini-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:400;align-items:center;justify-content:center}
+.mini-modal.open{display:flex}
+.mini-box{background:var(--surface);border-radius:10px;box-shadow:var(--shl);width:320px;padding:0;animation:mIn .15s ease;overflow:hidden}
+.mini-head{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.mini-body{padding:14px 16px}
+.mini-foot{padding:10px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:6px}
+
+/* info banner */
+.info-bar{border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11px;display:flex;align-items:flex-start;gap:7px;line-height:1.5}
+.info-teal{background:var(--tl);color:var(--teal);border:1px solid #99f6e4}
+.info-amber{background:var(--al);color:var(--amber);border:1px solid #fde68a}
+
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* KPI */
+.kpi-gauge-wrap{background:var(--s3);border-radius:4px;height:10px;overflow:hidden;margin-top:4px}
+.kpi-gauge-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.kpi-rep-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh)}
+.kpi-rep-card:hover{border-color:var(--accent)}
+.kpi-target-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}
+.kpi-target-row:last-child{border-bottom:none}
+.kpi-val-big{font-family:var(--disp);font-size:24px;font-weight:800}
+.kpi-month-tab{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:11px;cursor:pointer;font-family:var(--font);color:var(--t2);transition:all .13s}
+.kpi-month-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* DB SETUP OVERLAY */
+.db-setup{position:fixed;inset:0;background:rgba(10,10,20,.85);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.db-setup-box{background:var(--surface);border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,.3);width:560px;max-width:96vw;overflow:hidden;animation:mIn .2s ease}
+.db-setup-head{background:linear-gradient(135deg,#1a56e8,#5b21b6);padding:22px 26px;color:#fff}
+.db-setup-title{font-family:var(--disp);font-size:18px;font-weight:800;margin-bottom:4px}
+.db-setup-sub{font-size:12px;opacity:.8;line-height:1.5}
+.db-setup-body{padding:22px 26px}
+.db-ig{margin-bottom:14px}
+.db-ig label{display:block;font-size:10px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.db-ig input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--mono);font-size:12px;color:var(--text);background:var(--s2);transition:border-color .2s}
+.db-ig input:focus{outline:none;border-color:var(--accent);background:var(--surface)}
+.db-setup-foot{padding:14px 26px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--s2)}
+.db-status{font-size:11px;color:var(--t2);display:flex;align-items:center;gap:5px}
+.db-status.ok{color:var(--green)}.db-status.err{color:var(--red)}.db-status.chk{color:var(--amber)}
+.sql-box{background:#1e1e2e;border-radius:8px;padding:12px 14px;font-family:var(--mono);font-size:11px;color:#cdd6f4;line-height:1.7;margin-bottom:12px;overflow-x:auto;white-space:pre;border:1px solid rgba(255,255,255,.06)}
+.sync-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10px;font-family:var(--mono);border:1px solid var(--border)}
+.sync-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sync-live .sync-dot{background:var(--green);animation:pulse 2s infinite}
+.sync-live{background:var(--gl);color:var(--green);border-color:#bbf7d0}
+.sync-local .sync-dot{background:var(--amber)}
+.sync-local{background:var(--al);color:var(--amber);border-color:#fde68a}
+.sync-err .sync-dot{background:var(--red)}
+.sync-err{background:var(--rl);color:var(--red);border-color:#fca5a5}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo"><div class="logo-n">HireCRM</div><div class="logo-s">人材派遣・紹介</div></div>
+  <nav class="nav">
+    <div class="nl">概要</div>
+    <button class="nb" onclick="showPage('dashboard',this)"><span class="ni">📊</span><span>ダッシュボード</span></button>
+    <div class="nl">顧客</div>
+    <button class="nb active" onclick="showPage('existing',this)"><span class="ni">🏢</span><span>既存顧客</span><span class="nbg" id="nb-ex">0</span></button>
+    <button class="nb" onclick="showPage('contacted',this)"><span class="ni">🤝</span><span>接触</span><span class="nbg tl" id="nb-ct">0</span></button>
+    <button class="nb" onclick="showPage('new',this)"><span class="ni">📞</span><span>新規（テレアポ）</span><span class="nbg am" id="nb-nw">0</span></button>
+    <div class="nl">アラート</div>
+    <button class="nb" onclick="showPage('batting',this)"><span class="ni">⚠️</span><span>バッティング</span><span class="nbg rd" id="nb-bt">0</span></button>
+    <div class="nl">求人管理</div>
+    <button class="nb" onclick="showPage('jobs',this)"><span class="ni">📋</span><span>求人一覧</span><span class="nbg" id="nb-jb">0</span></button>
+    <button class="nb" onclick="showPage('jobdash',this)"><span class="ni">💰</span><span>費用・ROI</span></button>
+    <div class="nl">管理</div>
+    <button class="nb" onclick="showPage('kpi',this)"><span class="ni">🎯</span><span>目標・KPI管理</span></button>
+    <button class="nb" onclick="showPage('settings',this)"><span class="ni">⚙️</span><span>設定</span></button>
+  </nav>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="pt" id="page-title">既存顧客</div>
+    <div class="tba">
+      <div id="sync-pill" class="sync-pill sync-local" onclick="openDBSetup()" style="cursor:pointer">
+        <div class="sync-dot"></div><span id="sync-label">ローカルモード</span>
+      </div>
+      <button class="btn bg_ bsm" id="add-btn" onclick="openModalForPage()">＋ 顧客追加</button></div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page" id="page-dashboard">
+      <div class="share-banner">
+        <div><div class="share-title">📊 営業ダッシュボード</div><div class="share-sub">アクティブ顧客・新規接触・既存化をリアルタイム集計</div></div>
+        <div style="font-size:10px;opacity:.7">更新: <span id="db-upd">—</span></div>
+      </div>
+      <!-- TOP KPI -->
+      <div class="sg sg5" style="margin-bottom:10px">
+        <div class="sc" style="--ca:var(--accent)"><div class="sl">既存顧客数</div><div class="sv" id="db-total">0</div><div class="ss">既存ステージのみ</div></div>
+        <div class="sc" style="--ca:var(--green)"><div class="sl">今月 新規接触</div><div class="sv" id="db-nc">0</div><div class="ss">今月 訪問・提案を記録</div></div>
+        <div class="sc" style="--ca:var(--amber)"><div class="sl">今月 提案数</div><div class="sv" id="db-prop">0</div><div class="ss">見積提示企業数</div></div>
+        <div class="sc" style="--ca:var(--teal)"><div class="sl">今月 新規獲得</div><div class="sv" id="db-conv">0</div><div class="ss">既存化した企業</div></div>
+        <div class="sc" style="--ca:var(--red)"><div class="sl">バッティング</div><div class="sv" id="db-bat">0</div><div class="ss">社（要対応）</div></div>
+      </div>
+      <div class="sg sg5" style="margin-bottom:16px">
+        <div class="sc" style="--ca:var(--purple)"><div class="sl">稼働人数</div><div class="sv" id="db-workers">0</div><div class="ss">名（掲載中求人合計）</div></div>
+        <div class="sc" style="--ca:var(--orange)"><div class="sl">オーダー数</div><div class="sv" id="db-orders">0</div><div class="ss">件（掲載中求人）</div></div>
+      </div>
+
+      <!-- LEADERBOARD FIRST -->
+      <div class="dbc" style="margin-bottom:13px">
+        <div class="dbt"><span>🏆</span>新規接触 リーダーボード（今月）</div>
+        <div id="db-leader" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px"></div>
+      </div>
+
+      <div class="db-grid">
+        <div class="dbc"><div class="dbt"><span>📈</span>担当別 今月アクション数</div><div id="db-repbars"></div>
+          <div style="font-size:9px;color:var(--t3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">※訪問・提案のみカウント（質の高い接触）</div>
+        </div>
+        <div class="dbc"><div class="dbt"><span>🏢</span>既存 接触状況</div><div class="kpi-row" id="db-fresh"></div></div>
+        <div class="dbc"><div class="dbt"><span>🏭</span>業種別 顧客構成</div><div id="db-indbars"></div></div>
+        <div class="dbc"><div class="dbt"><span>📅</span>月次 アクション推移（6ヶ月）</div><div id="db-trend"></div><div style="font-size:9px;color:var(--t3);margin-top:6px">※訪問・提案のみカウント（全担当・全ステージ合計）</div></div>
+      </div>
+    </div>
+
+    <!-- EXISTING -->
+    <div class="page active" id="page-existing">
+      <div class="sg sg5">
+        <div class="sc" style="--ca:var(--accent)"><div class="sl">既存顧客数</div><div class="sv" id="s-ex">0</div><div class="ss">社</div></div>
+        <div class="sc" style="--ca:var(--green)"><div class="sl">アクティブ</div><div class="sv" id="s-ac">0</div><div class="ss">社</div></div>
+        <div class="sc" style="--ca:var(--amber)"><div class="sl">フォロー要</div><div class="sv" id="s-fw">0</div><div class="ss">社</div></div>
+        <div class="sc" style="--ca:var(--red)"><div class="sl">休眠</div><div class="sv" id="s-cl">0</div><div class="ss">社</div></div>
+        <div class="sc" style="--ca:var(--purple)"><div class="sl">今月 アクション</div><div class="sv" id="s-am">0</div><div class="ss">全担当合計</div></div>
+      </div>
+      <div class="tb">
+        <div class="sw"><span class="si">🔍</span><input type="text" placeholder="会社名・担当窓口・エリアで検索..." id="ex-q" oninput="renderExisting()"></div>
+        <select class="fs" id="ex-rep" onchange="renderExisting()"><option value="">全担当</option></select>
+        <select class="fs" id="ex-fr" onchange="renderExisting()">
+          <option value="">接触状況</option>
+          <option>アクティブ</option><option>要フォロー</option><option>休眠</option><option>未接触</option>
+        </select>
+        <select class="fs" id="ex-ind" onchange="renderExisting()"><option value="">業種</option></select>
+        <select class="fs" id="ex-area" onchange="renderExisting()"><option value="">エリア</option></select>
+        <select class="fs" id="ex-rank" onchange="renderExisting()">
+          <option value="">ランク</option>
+          <option>S</option><option>A</option><option>B</option><option>C</option><option>D</option>
+        </select>
+        <select class="fs" id="ex-pot" onchange="renderExisting()">
+          <option value="">将来性</option>
+          <option>高</option><option>中</option><option>低</option>
+        </select>
+        <button class="btn bg_ bsm" onclick="resetExFilters()">🔄 リセット</button>
+      </div>
+      <div class="card"><div class="tw">
+        <table><thead><tr>
+          <th>会社名</th><th>エリア</th><th>ランク</th><th>接触状況</th>
+          <th>担当</th><th>業種</th><th>担当窓口</th><th>最終接触</th><th>今月</th><th></th>
+        </tr></thead><tbody id="ex-tbody"></tbody></table>
+      </div><div id="ex-empty" class="empty" style="display:none"><div class="ei">🏢</div><div class="et">既存顧客がいません</div><div class="ed">「顧客追加」から登録</div></div></div>
+    </div>
+
+    <!-- CONTACTED -->
+    <div class="page" id="page-contacted">
+      <div class="sg sg4">
+        <div class="sc" style="--ca:var(--teal)"><div class="sl">接触中</div><div class="sv" id="sc-t">0</div><div class="ss">社</div></div>
+        <div class="sc" style="--ca:var(--orange)"><div class="sl">解放済み（45日超）</div><div class="sv" id="sc-freed">0</div><div class="ss">誰でもOK</div></div>
+        <div class="sc" style="--ca:var(--amber)"><div class="sl">提案中</div><div class="sv" id="sc-p">0</div><div class="ss">社</div></div>
+        <div class="sc" style="--ca:var(--green)"><div class="sl">今月 既存化</div><div class="sv" id="sc-c">0</div><div class="ss">社</div></div>
+      </div>
+      <div class="info-bar info-teal">
+        <span>🤝</span>
+        <div><strong>接触の定義：訪問・提案のみ</strong>　最終接触から45日で「解放済み」。解放済み＋14日未接触で「新規」に自動戻り。</div>
+      </div>
+      <div class="tb">
+        <div class="sw"><span class="si">🔍</span><input type="text" placeholder="会社名・担当窓口・エリアで検索..." id="ct-q" oninput="renderContacted()"></div>
+        <select class="fs" id="ct-rep" onchange="renderContacted()"><option value="">全担当</option></select>
+        <select class="fs" id="ct-st" onchange="renderContacted()">
+          <option value="">サブステータス</option>
+          <option>初回接触</option><option>訪問・提案</option><option>電話提案</option><option>検討中</option><option>提案合わず（未取引）</option>
+        </select>
+        <select class="fs" id="ct-rank" onchange="renderContacted()">
+          <option value="">ランク</option>
+          <option>S</option><option>A</option><option>B</option><option>C</option><option>D</option>
+        </select>
+        <select class="fs" id="ct-ind" onchange="renderContacted()"><option value="">業種</option></select>
+        <select class="fs" id="ct-area" onchange="renderContacted()"><option value="">エリア</option></select>
+        <button class="stb" id="sort-dead-btn" onclick="toggleDeadSort()">⏰ 期限順</button>
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--t2);cursor:pointer">
+          <input type="checkbox" id="ct-freed-only" onchange="renderContacted()"> 解放済みのみ
+        </label>
+        <button class="btn bg_ bsm" onclick="resetCtFilters()">🔄 リセット</button>
+      </div>
+      <div class="card"><div class="tw">
+        <table><thead><tr>
+          <th>会社名</th><th>エリア</th><th>業種</th><th>担当</th>
+          <th>電話</th><th>担当窓口</th><th>サブステータス</th>
+          <th>最終接触</th><th>状況</th><th>解放まで</th><th>⚡ 記録</th><th></th>
+        </tr></thead><tbody id="ct-tbody"></tbody></table>
+      </div><div id="ct-empty" class="empty" style="display:none"><div class="ei">🤝</div><div class="et">接触中の顧客がいません</div><div class="ed">「＋ 接触中として追加」から登録</div></div></div>
+    </div>
+
+    <!-- NEW TELEAPO -->
+    <div class="page" id="page-new">
+      <div class="sg sg4">
+        <div class="sc" style="--ca:var(--amber)"><div class="sl">未接触</div><div class="sv" id="sn-t">0</div><div class="ss">社</div></div>
+        <div class="sc" style="--ca:var(--accent)"><div class="sl">架電済み</div><div class="sv" id="sn-called">0</div><div class="ss">社（アクション記録あり）</div></div>
+        <div class="sc" style="--ca:var(--teal)"><div class="sl">接触転換数</div><div class="sv" id="sn-conv">0</div><div class="ss">社（接触ページへ）</div></div>
+        <div class="sc" style="--ca:var(--red)"><div class="sl">バッティング</div><div class="sv" id="sn-b">0</div><div class="ss">社</div></div>
+      </div>
+      <div id="nw-btban" class="info-bar info-amber" style="display:none">
+        <span>⚠️</span><div><strong>バッティングアラート：</strong><span id="nw-bttext"></span></div>
+      </div>
+      <div class="info-bar" style="background:var(--s2);border:1px solid var(--border);color:var(--t2)">
+        <span>📞</span>
+        <div>新規テレアポは<strong>全員の共有リスト</strong>です。架電・接触は誰でも記録できます。ナレッジは全員が参照できます。担当割当はあくまで優先担当の目安です。</div>
+      </div>
+      <!-- Rep filter + add btn -->
+      <div id="rep-tabs" style="display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;align-items:center"></div>
+      <div class="tb">
+        <div class="sw"><span class="si">🔍</span><input type="text" placeholder="会社名・エリアで検索..." id="nw-q" oninput="renderNew()"></div>
+        <select class="fs" id="nw-area" onchange="renderNew()"><option value="">エリア</option></select>
+        <button class="btn bg_ bsm" onclick="resetNwFilters()">🔄 リセット</button>
+      </div>
+      <div class="card"><div class="tw">
+        <table><thead><tr>
+          <th>会社名</th><th>エリア</th><th>業種</th><th>電話</th>
+          <th>架電日・記録者</th><th>メモ</th><th>⚡</th><th></th>
+        </tr></thead><tbody id="nw-tbody"></tbody></table>
+      </div><div id="nw-empty" class="empty" style="display:none"><div class="ei">📞</div><div class="et">新規顧客がいません</div><div class="ed">「＋ 顧客追加」から登録</div></div></div>
+    </div>
+
+    <!-- BATTING -->
+    <div class="page" id="page-batting">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:13px;box-shadow:var(--sh);font-size:12px;color:var(--t2);line-height:1.6">
+        ⚠️ <strong>バッティング：</strong>同一新規企業に異なる担当が訪問・提案を記録している状態です。
+      </div>
+      <div id="bt-list"></div>
+      <div id="bt-empty" class="empty" style="display:none"><div class="ei">✅</div><div class="et">バッティングなし</div></div>
+    </div>
+
+    <!-- JOBS LIST -->
+    <div class="page" id="page-jobs">
+      <div class="sg sg5">
+        <div class="sc" style="--ca:var(--accent)"><div class="sl">掲載中</div><div class="sv" id="sj-active">0</div><div class="ss">件</div></div>
+        <div class="sc" style="--ca:var(--amber)"><div class="sl">掲載中 費用計</div><div class="sv" id="sj-cost">¥0</div><div class="ss">合計</div></div>
+        <div class="sc" style="--ca:var(--green)"><div class="sl">掲載中 採用数</div><div class="sv" id="sj-hired">0</div><div class="ss">名</div></div>
+        <div class="sc" style="--ca:var(--purple)"><div class="sl">稼働人数</div><div class="sv" id="sj-workers">0</div><div class="ss">名（掲載中合計）</div></div>
+        <div class="sc" style="--ca:var(--teal)"><div class="sl">採用単価(CPA)</div><div class="sv" id="sj-cph">—</div><div class="ss">円/名</div></div>
+      </div>
+      <div class="tb">
+        <div class="sw"><span class="si">🔍</span><input type="text" placeholder="顧客名・職種・媒体で検索..." id="jb-q" oninput="renderJobs()"></div>
+        <select class="fs" id="jb-media" onchange="renderJobs()"><option value="">全媒体</option></select>
+        <select class="fs" id="jb-status" onchange="renderJobs()">
+          <option value="">全ステータス</option>
+          <option value="active">掲載中</option>
+          <option value="closed">掲載終了</option>
+          <option value="draft">下書き</option>
+        </select>
+        <select class="fs" id="jb-client" onchange="renderJobs()"><option value="">全顧客</option></select>
+        <select class="fs" id="jb-rep" onchange="renderJobs()"><option value="">全担当</option></select>
+        <select class="fs" id="jb-sort" onchange="renderJobs()">
+          <option value="">並び順: デフォルト</option>
+          <option value="media">媒体順</option>
+          <option value="cost_desc">費用↓</option>
+          <option value="hired_desc">採用数↓</option>
+          <option value="cpa_asc">CPA↑（低い順）</option>
+        </select>
+        <button class="btn bg_ bsm" onclick="resetJobFilters()">リセット</button>
+        <button class="btn bp bsm" onclick="openJobModal()">＋ 求人追加</button>
+      </div>
+      <div class="card"><div class="tw">
+        <table id="jb-table"><thead><tr>
+          <th>顧客名</th><th>職種</th><th>媒体</th><th>掲載期間</th>
+          <th>掲載費用</th><th>応募数</th><th>採用数</th><th>稼働</th><th>CPA</th>
+          <th>ステータス</th><th>コボット</th><th></th>
+        </tr></thead><tbody id="jb-tbody"></tbody></table>
+      </div>
+      <div id="jb-empty" class="empty" style="display:none"><div class="ei">📋</div><div class="et">求人がありません</div><div class="ed">「＋ 求人追加」から登録</div></div></div>
+    </div>
+
+    <!-- JOB DASHBOARD -->
+    <div class="page" id="page-jobdash">
+      <!-- ヘッダー：期間フィルタ + 月次入力 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-family:var(--disp);font-size:14px;font-weight:700">費用・ROI分析</span>
+          <select class="fs" id="jd-period" onchange="renderJobDash()" style="font-size:11px">
+            <option value="all">全期間</option>
+            <option value="thismonth">今月</option>
+            <option value="lastmonth">先月</option>
+            <option value="3m">直近3ヶ月</option>
+            <option value="6m">直近6ヶ月</option>
+          </select>
+        </div>
+        <button class="btn bp bsm" onclick="openMonthlyInput()">📥 月次実績入力</button>
+      </div>
+      <!-- KPI 5枚 -->
+      <div class="sg sg5" style="margin-bottom:14px">
+        <div class="sc" style="--ca:var(--accent)"><div class="sl">掲載費用合計</div><div class="sv" id="jd-total-cost">¥0</div><div class="ss" id="jd-cost-period">全期間</div></div>
+        <div class="sc" style="--ca:var(--green)"><div class="sl">採用数</div><div class="sv" id="jd-total-hired">0</div><div class="ss">名</div></div>
+        <div class="sc" style="--ca:var(--purple)"><div class="sl">平均 CPA</div><div class="sv" id="jd-avg-cph">—</div><div class="ss">採用単価</div></div>
+        <div class="sc" style="--ca:var(--teal)"><div class="sl">応募数</div><div class="sv" id="jd-total-apps">0</div><div class="ss">名</div></div>
+        <div class="sc" style="--ca:var(--amber)"><div class="sl">応募→採用率</div><div class="sv" id="jd-hire-rate">—</div><div class="ss"></div></div>
+      </div>
+      <!-- 3カラム上段 -->
+      <div style="display:grid;grid-template-columns:1.1fr 1fr 0.9fr;gap:12px;margin-bottom:12px">
+        <div class="dbc"><div class="dbt"><span>🏆</span>媒体別 ROIランキング</div><div id="jd-media-roi"></div></div>
+        <div class="dbc">
+          <div class="dbt"><span>💰</span>媒体別 費用・採用内訳</div>
+          <div id="jd-media-cost-svg" style="margin-bottom:10px"></div>
+          <div style="display:flex;align-items:center;gap:12px" id="jd-media-donut-row">
+            <div id="jd-media-donut"></div>
+            <div id="jd-media-donut-legend" style="font-size:10px;flex:1"></div>
+          </div>
+        </div>
+        <div class="dbc">
+          <div class="dbt"><span>📅</span>月次 費用推移（6ヶ月）</div>
+          <div id="jd-cost-trend"></div>
+          <div style="margin-top:6px;font-size:9px;color:var(--t3)">■ 費用（棒）　<span style="color:var(--green)">● 採用数（線）</span></div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+            <div style="font-size:10px;font-weight:600;color:var(--t2);margin-bottom:6px">掲載状況サマリー</div>
+            <div id="jd-active-summary"></div>
+          </div>
+        </div>
+      </div>
+      <!-- 2カラム下段 -->
+      <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:12px">
+        <div class="dbc"><div class="dbt"><span>🏢</span>顧客別 求人・採用・費用</div><div id="jd-client-table"></div></div>
+        <div class="dbc">
+          <div class="dbt"><span>📊</span>職種別 採用実績</div>
+          <div id="jd-role-bars"></div>
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+            <div style="font-size:10px;font-weight:600;color:var(--t2);margin-bottom:6px">求人ステータス内訳</div>
+            <div id="jd-status-summary"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI / 目標管理 -->
+    <div class="page" id="page-kpi">
+      <!-- Month selector bar -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap" id="kpi-month-tabs"></div>
+        <div style="display:flex;gap:6px">
+          <button class="btn bp bsm" onclick="openKpiModal()">🎯 目標設定</button>
+          <button class="btn bg_ bsm" onclick="openBudgetModal()">💰 予算設定</button>
+        </div>
+      </div>
+
+      <!-- Team KPI summary -->
+      <div class="sg sg5" style="margin-bottom:14px">
+        <div class="sc" style="--ca:var(--accent)"><div class="sl">新規接触 目標</div><div class="sv" id="kpi-nc-goal">—</div><div class="ss" id="kpi-nc-act">実績 —</div></div>
+        <div class="sc" style="--ca:var(--amber)"><div class="sl">提案 目標</div><div class="sv" id="kpi-pr-goal">—</div><div class="ss" id="kpi-pr-act">実績 —</div></div>
+        <div class="sc" style="--ca:var(--green)"><div class="sl">既存化 目標</div><div class="sv" id="kpi-wn-goal">—</div><div class="ss" id="kpi-wn-act">実績 —</div></div>
+        <div class="sc" style="--ca:var(--purple)"><div class="sl">媒体費用 予算</div><div class="sv" id="kpi-bd-goal">—</div><div class="ss" id="kpi-bd-act">実績 —</div></div>
+        <div class="sc" style="--ca:var(--teal)"><div class="sl">チーム達成率</div><div class="sv" id="kpi-team-rate">—</div><div class="ss">新規接触ベース</div></div>
+      </div>
+
+      <!-- Rep KPI cards grid -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px;margin-bottom:16px" id="kpi-rep-cards"></div>
+
+      <!-- Monthly trend table -->
+      <div class="dbc">
+        <div class="dbt"><span>📅</span>過去6ヶ月 KPI推移（チーム合計）</div>
+        <div id="kpi-trend-table" style="overflow-x:auto"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div style="max-width:760px">
+
+        <!-- 担当者マスタ -->
+        <div class="dbc" style="margin-bottom:14px">
+          <div class="dbt">👤 担当者マスタ</div>
+          <div id="set-reps-list" style="margin-bottom:10px"></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <input class="fs" id="set-rep-id" placeholder="ID（英小文字）" style="width:110px">
+            <input class="fs" id="set-rep-name" placeholder="氏名" style="width:120px">
+            <input class="fs" id="set-rep-short" placeholder="略称" style="width:80px">
+            <button class="btn bp bsm" onclick="addRep()">＋ 追加</button>
+          </div>
+        </div>
+
+        <!-- エリアマスタ -->
+        <div class="dbc" style="margin-bottom:14px">
+          <div class="dbt">📍 エリアマスタ</div>
+          <div id="set-areas-list" style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:5px"></div>
+          <div style="display:flex;gap:6px">
+            <input class="fs" id="set-area-val" placeholder="エリア名" style="flex:1">
+            <button class="btn bp bsm" onclick="addArea()">＋ 追加</button>
+          </div>
+        </div>
+
+        <!-- 媒体マスタ -->
+        <div class="dbc" style="margin-bottom:14px">
+          <div class="dbt">📣 媒体マスタ</div>
+          <div id="set-media-list" style="margin-bottom:10px"></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <input class="fs" id="set-med-id" placeholder="ID（英小文字）" style="width:110px">
+            <input class="fs" id="set-med-name" placeholder="媒体名" style="width:140px">
+            <button class="btn bp bsm" onclick="addMedia()">＋ 追加</button>
+          </div>
+        </div>
+
+        <!-- 業種マスタ -->
+        <div class="dbc">
+          <div class="dbt">🏭 業種マスタ</div>
+          <div id="set-ind-list" style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:5px"></div>
+          <div style="display:flex;gap:6px">
+            <input class="fs" id="set-ind-val" placeholder="業種名" style="flex:1">
+            <button class="btn bp bsm" onclick="addIndustry()">＋ 追加</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- DETAIL -->
+<div class="overlay" id="overlay" onclick="closeDetail()"></div>
+<div class="detail" id="detail">
+  <div class="dh">
+    <div class="av" id="d-av" style="width:36px;height:36px;font-size:13px"></div>
+    <div class="dhi"><div class="dhn" id="d-name"></div><div class="dhs" id="d-sub"></div></div>
+    <div class="dha">
+      <button class="btn bg_ bsm" onclick="editCurrent()">編集</button>
+      <button class="btn bg_ bsm" onclick="closeDetail()">✕</button>
+    </div>
+  </div>
+  <div id="d-body"></div>
+</div>
+
+<!-- CLIENT MODAL -->
+<div class="mo" id="client-modal">
+  <div class="modal" style="width:640px">
+    <div class="mh"><div class="mt" id="modal-title">顧客を追加</div><button class="mcl" onclick="closeModal()">✕</button></div>
+    <div class="mb">
+      <div class="dupe-alert" id="dupe-alert"><span style="font-size:14px;flex-shrink:0">⚠️</span><div id="dupe-msg"></div></div>
+
+      <!-- ステータス表示 (追加モード用) -->
+      <div id="f-stage-info" style="display:none;background:var(--acl);border:1px solid #bfdbfe;border-radius:7px;padding:8px 11px;margin-bottom:10px;font-size:11px;color:var(--accent)"></div>
+
+      <!-- === 新規モード: 社名+電話+エリア+フリーメモ === -->
+      <div id="f-mode-new">
+        <div class="fg2" style="margin-bottom:10px">
+          <div class="fg ff"><label>会社名 *</label><input id="f-co" type="text" oninput="checkDupe()"></div>
+          <div class="fg"><label>電話 *</label><input id="f-phone" type="text" placeholder="06-xxxx-xxxx"></div>
+          <div class="fg"><label>エリア</label><input id="f-area-new" type="text" placeholder="例：大阪府堺市"></div>
+          <div class="fg"><label>自社担当</label><select id="f-assignee-new"></select></div>
+          <div class="fg ff"><label>メモ（架電目的・紹介経路など自由記入）</label><textarea id="f-memo-new" rows="3" placeholder="紹介経由・問合せ内容・担当不明など何でも"></textarea></div>
+        </div>
+      </div>
+
+      <!-- === 接触中モード: 社名+電話+サブステータス+エリア+担当 === -->
+      <div id="f-mode-contact" style="display:none">
+        <div class="fg2" style="margin-bottom:10px">
+          <div class="fg ff"><label>会社名 *</label><input id="f-co-ct" type="text" oninput="checkDupeCt()"></div>
+          <div class="fg"><label>電話</label><input id="f-phone-ct" type="text" placeholder="06-xxxx-xxxx"></div>
+          <div class="fg ff"><label>サブステータス *</label>
+            <select id="f-contact-status">
+              <option value="">選択してください</option>
+              <option>初回接触</option><option>訪問・提案</option><option>電話提案</option><option>検討中</option><option>提案合わず（未取引）</option>
+            </select>
+          </div>
+          <div class="fg"><label>業種</label><select id="f-ind-ct"></select></div>
+          <div class="fg"><label>エリア</label><input id="f-area-ct" type="text" placeholder="例：大阪府堺市"></div>
+          <div class="fg"><label>規模</label><select id="f-scl-ct"><option value="">—</option><option>〜10名</option><option>11〜50名</option><option>51〜200名</option><option>201〜1000名</option><option>1001名以上</option></select></div>
+          <div class="fg"><label>自社担当</label><select id="f-assignee-ct"></select></div>
+          <div class="fg"><label>ランク</label><select id="f-rank-ct"><option value="">—</option><option>S</option><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+          <div class="fg"><label>将来性</label><select id="f-pot-ct"><option value="">—</option><option>高</option><option>中</option><option>低</option></select></div>
+          <div class="fg ff"><label>メモ</label><textarea id="f-memo-ct" rows="2" placeholder="接触時のポイントなど"></textarea></div>
+        </div>
+      </div>
+
+      <!-- === 既存モード: 社名+電話+接触状況+担当 === -->
+      <div id="f-mode-existing" style="display:none">
+        <div class="fg2" style="margin-bottom:10px">
+          <div class="fg ff"><label>会社名 *</label><input id="f-co-ex" type="text" oninput="checkDupeEx()"></div>
+          <div class="fg"><label>電話</label><input id="f-phone-ex" type="text" placeholder="06-xxxx-xxxx"></div>
+          <div class="fg ff"><label>接触状況 *</label>
+            <select id="f-existing-status">
+              <option value="">選択してください</option>
+              <option>接触済み</option><option>未接触</option><option>不明</option>
+            </select>
+          </div>
+          <div class="fg"><label>業種</label><select id="f-ind-ex"></select></div>
+          <div class="fg"><label>エリア</label><input id="f-area-ex" type="text" placeholder="例：大阪府堺市"></div>
+          <div class="fg"><label>規模</label><select id="f-scl-ex"><option value="">—</option><option>〜10名</option><option>11〜50名</option><option>51〜200名</option><option>201〜1000名</option><option>1001名以上</option></select></div>
+          <div class="fg"><label>自社担当</label><select id="f-assignee-ex"></select></div>
+          <div class="fg"><label>ランク</label><select id="f-rank-ex"><option value="">—</option><option>S</option><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+          <div class="fg"><label>将来性</label><select id="f-pot-ex"><option value="">—</option><option>高</option><option>中</option><option>低</option></select></div>
+          <div class="fg ff"><label>担当窓口（先方）</label>
+            <div style="display:flex;gap:6px">
+              <input id="f-cdisplay-ex" type="text" placeholder="選択または直接入力..." style="flex:1;cursor:pointer" onclick="openCP('ex')" readonly>
+              <button class="btn bg_ bsm" onclick="openCP('ex')">選択 ▾</button>
+            </div>
+            <input type="hidden" id="f-contact-ex"><input type="hidden" id="f-ctitle-ex">
+          </div>
+          <div class="fg ff"><label>メモ</label><textarea id="f-memo-ex" rows="2" placeholder="ナレッジ・注意点など"></textarea></div>
+        </div>
+      </div>
+
+      <!-- === 編集モード: 全フィールド === -->
+      <div id="f-mode-edit" style="display:none">
+        <div class="fg2" style="margin-bottom:10px">
+          <div class="fg ff"><label>会社名 *</label><input id="f-co-ed" type="text" oninput="checkDupeEd()"></div>
+          <div class="fg"><label>ステータス（大分類）</label>
+            <select id="f-stage-ed" onchange="onEditStageChange()">
+              <option value="new">新規</option>
+              <option value="active_contact">接触中</option>
+              <option value="existing">既存</option>
+              <option value="dormant">休眠</option>
+              <option value="withdrawn">撤退</option>
+            </select>
+          </div>
+          <div class="fg" id="f-ed-csub">
+            <label>サブステータス（接触中）</label>
+            <select id="f-contact-status-ed">
+              <option value="">—</option>
+              <option>初回接触</option><option>訪問・提案</option><option>電話提案</option><option>検討中</option><option>提案合わず（未取引）</option>
+            </select>
+          </div>
+          <div class="fg" id="f-ed-exsub">
+            <label>接触状況（既存）</label>
+            <select id="f-existing-status-ed">
+              <option value="">—</option>
+              <option>接触済み</option><option>未接触</option><option>不明</option>
+            </select>
+          </div>
+          <div class="fg"><label>電話</label><input id="f-phone-ed" type="text" placeholder="06-xxxx-xxxx"></div>
+          <div class="fg"><label>業種</label><select id="f-ind-ed"></select></div>
+          <div class="fg"><label>エリア</label><input id="f-area-ed" type="text"></div>
+          <div class="fg"><label>規模</label><select id="f-scl-ed"><option value="">—</option><option>〜10名</option><option>11〜50名</option><option>51〜200名</option><option>201〜1000名</option><option>1001名以上</option></select></div>
+          <div class="fg"><label>拠点数</label><input id="f-branches-ed" type="text" placeholder="例：本社1・工場3"></div>
+          <div class="fg ff"><label>担当窓口（先方）</label>
+            <div style="display:flex;gap:6px">
+              <input id="f-cdisplay" type="text" placeholder="選択または直接入力..." style="flex:1;cursor:pointer" onclick="openCP('ed')" readonly>
+              <button class="btn bg_ bsm" onclick="openCP('ed')">選択 ▾</button>
+            </div>
+            <input type="hidden" id="f-contact"><input type="hidden" id="f-ctitle">
+          </div>
+          <div class="fg"><label>メール</label><input id="f-email-ed" type="email"></div>
+          <div class="fg"><label>Web</label><input id="f-web-ed" type="text" placeholder="https://..."></div>
+          <div class="fg"><label>住所</label><input id="f-addr-ed" type="text"></div>
+          <div class="fg"><label>自社担当</label><select id="f-assignee-ed"></select></div>
+          <div class="fg"><label>ランク</label><select id="f-rank-ed"><option value="">—</option><option>S</option><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+          <div class="fg"><label>将来性</label><select id="f-pot-ed"><option value="">—</option><option>高</option><option>中</option><option>低</option></select></div>
+          <div class="fg ff"><label>メモ・ナレッジ</label><textarea id="f-memo-ed" rows="3" placeholder="接触時のポイント・担当者の特徴・注意点など"></textarea></div>
+        </div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bg_" onclick="closeModal()">キャンセル</button><button class="btn bp" onclick="saveClient()">保存</button></div>
+  </div>
+</div>
+
+<!-- CP MODAL -->
+<div class="mo" id="cp-modal">
+  <div class="modal" style="width:360px">
+    <div class="mh"><div class="mt">担当窓口を選択</div><button class="mcl" onclick="closeCP()">✕</button></div>
+    <div class="mb">
+      <div class="cpg" id="cp-grid"></div>
+      <div style="margin-top:11px;padding-top:11px;border-top:1px solid var(--border)">
+        <div style="font-size:10px;color:var(--t2);margin-bottom:6px;font-weight:600">手動入力</div>
+        <div style="display:flex;gap:6px">
+          <input type="text" id="cp-name" placeholder="氏名" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:var(--font);font-size:12px">
+          <input type="text" id="cp-ttl" placeholder="役職" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:var(--font);font-size:12px">
+          <button class="btn bp bsm" onclick="selectCPManual()">追加</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUICK ACTION MINI MODAL -->
+<div class="mini-modal" id="mini-modal">
+  <div class="mini-box">
+    <div class="mini-head">
+      <span style="font-size:13px;font-weight:700" id="mini-title">アクション記録</span>
+      <button class="mcl" onclick="closeMini()">✕</button>
+    </div>
+    <div class="mini-body">
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px" id="mini-type-btns"></div>
+      <textarea class="ani" id="mini-note" placeholder="メモ（任意）" style="min-height:56px;width:100%"></textarea>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:7px;flex-wrap:wrap">
+        <input type="date" class="adi" id="mini-date">
+        <select class="arsel" id="mini-rep"></select>
+      </div>
+    </div>
+    <div class="mini-foot">
+      <button class="btn bg_" onclick="closeMini()">キャンセル</button>
+      <button class="btn bp" onclick="saveMini()">記録する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONSTANTS
+// ============================================================
+let INDUSTRIES=['物流・運輸','製造','リネン・クリーニング','医療・介護','建設・土木','IT・テック','食品・飲料','小売・流通','金融・保険','サービス業','その他'];
+let AREAS_MASTER=['大阪府堺市','大阪市大正区','大阪府茨木市','大阪府八尾市','愛知県名古屋市','兵庫県神戸市','東京都新宿区','福岡県福岡市'];
+let REPS=[
+  {id:'tanaka',name:'田中 哲也',short:'田中'},
+  {id:'suzuki',name:'鈴木 美咲',short:'鈴木'},
+  {id:'sato',name:'佐藤 健一',short:'佐藤'},
+  {id:'takahashi',name:'高橋 優子',short:'高橋'},
+  {id:'yamamoto',name:'山本 大輔',short:'山本'},
+];
+const repShort=id=>REPS.find(r=>r.id===id)?.short||id;
+const repName=id=>REPS.find(r=>r.id===id)?.name||id;
+const DEFAULT_CONTACTS=[
+  {name:'山田 太郎',title:'人事部長'},{name:'佐藤 花子',title:'採用担当'},
+  {name:'鈴木 次郎',title:'総務課長'},{name:'高橋 美咲',title:'HR Manager'},
+  {name:'田中 健一',title:'取締役'},{name:'中村 一郎',title:'部長'},
+];
+const PALETTE=[{bg:'#dbeafe',fg:'#1d4ed8'},{bg:'#dcfce7',fg:'#15803d'},{bg:'#fef3c7',fg:'#b45309'},{bg:'#fce7f3',fg:'#be185d'},{bg:'#ede9fe',fg:'#6d28d9'},{bg:'#ccfbf1',fg:'#0f766e'},{bg:'#ffe4e6',fg:'#be123c'},{bg:'#fef9c3',fg:'#a16207'}];
+
+// CONTACT THRESHOLDS
+const CONTACT_EXPIRE_DAYS = 45;  // 接触→解放 (45日)
+const RETURN_TO_NEW_DAYS  = 14;  // 解放後さらに14日 → 新規に戻る
+
+// STAGE DEFINITIONS (v16: unified 5-stage system)
+const STAGE_LABEL = {
+  new:'新規',
+  active_contact:'接触中',
+  existing:'既存',
+  dormant:'休眠',
+  withdrawn:'撤退'
+};
+const STAGE_BADGE = {
+  new:'b-bl',            // 青
+  active_contact:'b-am', // 黄
+  existing:'b-gr',       // 緑
+  dormant:'b-gy',        // グレー
+  withdrawn:'b-rd'       // 赤
+};
+const STAGES_ALL = ['new','active_contact','existing','dormant','withdrawn'];
+const CONTACT_SUB = ['初回接触','訪問・提案','電話提案','検討中','提案合わず（未取引）'];
+const EXISTING_SUB = ['アクティブ','要フォロー','休眠','未接触'];
+const RANK_VALS = ['S','A','B','C','D'];
+const POTENTIAL_VALS = ['高','中','低'];
+const stageLabel = s => STAGE_LABEL[s] || s;
+const stageBadge = s => STAGE_BADGE[s] || 'b-gy';
+function migrateStage(s){
+  if(!s||s==='new') return 'new';
+  if(s==='contacted'||s==='初回接触'||s==='active_contact') return 'active_contact';
+  if(s==='proposing'||s==='提案中'||s==='検討中') return 'active_contact';
+  if(s==='existing'||s==='既存化') return 'existing';
+  if(s==='dormant'||s==='休眠') return 'dormant';
+  if(s==='withdrawn'||s==='離脱'||s==='撤退') return 'withdrawn';
+  return s;
+}
+
+let clients=[],actions=[],editingId=null,openDetailId=null,currentPage='existing';
+let selectedAT='訪問',sortDead=false,selRepFilter='',miniClientId=null,miniAT='訪問';
+
+// ============================================================
+// INIT DATA
+// ============================================================
+function initData(){
+  const ago=n=>{const d=new Date();d.setDate(d.getDate()-n);return d.toISOString().slice(0,10)};
+  clients=[
+    {id:'e1',stage:'existing',existingStatus:'アクティブ',rank:'A',potential:'高',company:'㈱関西物流センター',industry:'物流・運輸',scale:'201〜1000名',branches:'本社1・倉庫5',contact:'山田 太郎',ctitle:'物流部長',phone:'06-1111-2222',email:'yamada@klc.co.jp',area:'大阪府堺市',addr:'大阪府堺市堺区港町1-2-3',web:'https://klc.co.jp',assignee:'tanaka',memo:'長期取引先。繁忙期（10〜3月）に大量派遣依頼あり。フォークリフト免許保有者優先。',createdAt:ago(300)},
+    {id:'e2',stage:'existing',existingStatus:'アクティブ',rank:'B',potential:'中',company:'ニッポン製造㈱',industry:'製造',scale:'51〜200名',branches:'本社・工場2',contact:'佐藤 花子',ctitle:'採用担当',phone:'072-2222-3333',email:'sato@nm.co.jp',area:'大阪府東大阪市',addr:'',web:'',assignee:'suzuki',memo:'ライン工・フォークリフトオペの依頼が多い。春と秋に採用集中。',createdAt:ago(200)},
+    {id:'e3',stage:'existing',existingStatus:'休眠',rank:'C',potential:'低',company:'クリーンサービス㈱',industry:'リネン・クリーニング',scale:'11〜50名',branches:'本社1',contact:'鈴木 次郎',ctitle:'総務課長',phone:'06-3333-4444',email:'',area:'大阪市西淀川区',addr:'',web:'',assignee:'sato',memo:'ホテル向けリネン。シフト要員確保がミッション。',createdAt:ago(150)},
+    {id:'e4',stage:'existing',existingStatus:'アクティブ',rank:'S',potential:'高',company:'山田医療グループ',industry:'医療・介護',scale:'201〜1000名',branches:'クリニック12院',contact:'高橋 美咲',ctitle:'HR Manager',phone:'06-5555-6666',email:'',area:'大阪市中央区',addr:'',web:'',assignee:'takahashi',memo:'看護師・介護士の需要が高い。3月に大規模採用予定。',createdAt:ago(365)},
+    {id:'e5',stage:'existing',existingStatus:'要フォロー',rank:'B',potential:'中',company:'テックイノベーション㈱',industry:'IT・テック',scale:'51〜200名',branches:'東京・大阪支社',contact:'田中 健一',ctitle:'取締役',phone:'03-7777-8888',email:'',area:'東京都新宿区',addr:'',web:'',assignee:'tanaka',memo:'AIエンジニアのニーズ継続中。',createdAt:ago(90)},
+    // 接触中
+    {id:'n1',stage:'active_contact',contactStatus:'検討中',rank:'A',potential:'高',company:'グローバルロジ㈱',industry:'物流・運輸',scale:'201〜1000名',branches:'本社・倉庫3',contact:'中村 一郎',ctitle:'部長',phone:'06-9999-0000',email:'',area:'大阪府茨木市',addr:'',web:'',assignee:'yamamoto',memo:'倉庫増設で大量採用予定。競合とも交渉中。月30名規模。折り返し連絡が多い。',createdAt:ago(40)},
+    {id:'n2',stage:'active_contact',contactStatus:'訪問・提案',rank:'B',potential:'中',company:'東洋繊維㈱',industry:'リネン・クリーニング',scale:'11〜50名',branches:'本社1',contact:'渡辺 圭子',ctitle:'人事係長',phone:'06-1234-5678',email:'',area:'大阪市大正区',addr:'',web:'',assignee:'sato',memo:'リネン部門の増員計画あり。4月目標。担当者は女性。丁寧な対応が必要。',createdAt:ago(15)},
+    {id:'n3',stage:'active_contact',contactStatus:'初回接触',rank:'',potential:'',company:'ネクスト建設㈱',industry:'建設・土木',scale:'51〜200名',branches:'',contact:'',ctitle:'',phone:'052-0000-1111',email:'',area:'愛知県名古屋市',addr:'',web:'',assignee:'suzuki',memo:'HPからの問い合わせ。来月アポ予定。',createdAt:ago(5)},
+    {id:'n4',stage:'active_contact',contactStatus:'初回接触',rank:'',potential:'',company:'グローバルロジ㈱',industry:'物流・運輸',scale:'201〜1000名',branches:'',contact:'小林 哲',ctitle:'課長',phone:'06-9999-0000',email:'',area:'大阪府茨木市',addr:'',web:'',assignee:'suzuki',memo:'展示会で名刺交換。n1と同社→バッティング注意。',createdAt:ago(8)},
+    // 新規
+    {id:'n5',stage:'new',rank:'',potential:'',company:'スピード食品㈱',industry:'食品・飲料',scale:'51〜200名',branches:'',contact:'',ctitle:'',phone:'06-5678-1234',email:'',area:'大阪府八尾市',addr:'',web:'',assignee:'tanaka',memo:'紹介経由。食品工場ライン増設予定。4月以降。担当部署不明→代表電話から。',createdAt:ago(3)},
+  ];
+  actions=[
+    {id:'a1',clientId:'e1',type:'訪問',note:'繁忙期の人員計画ヒアリング。3月末までに20名追加の依頼。',rep:'tanaka',date:ago(10)},
+    {id:'a2',clientId:'e1',type:'提案',note:'フォークリフトオペ10名・一般作業10名の提案書送付。',rep:'tanaka',date:ago(4)},
+    {id:'a3',clientId:'e2',type:'訪問',note:'ライン増設計画の確認。4月から月15名の継続依頼。',rep:'suzuki',date:ago(25)},
+    {id:'a4',clientId:'e3',type:'訪問',note:'シフト状況確認訪問。',rep:'sato',date:ago(62)},
+    {id:'a5',clientId:'e4',type:'訪問',note:'定期訪問。看護師5名・介護士10名の年間計画を確認。',rep:'takahashi',date:ago(28)},
+    {id:'a6',clientId:'e4',type:'提案',note:'看護師候補5名のプロフィール提出。来週回答予定。',rep:'takahashi',date:ago(8)},
+    {id:'a7',clientId:'e5',type:'訪問',note:'AIエンジニアのニーズヒアリング。2名の紹介依頼受領。',rep:'tanaka',date:ago(18)},
+    // new contacted
+    {id:'a8',clientId:'n1',type:'訪問',note:'倉庫見学＆ヒアリング。月30名規模の派遣ニーズを確認。',rep:'yamamoto',date:ago(40)},
+    {id:'a9',clientId:'n1',type:'提案',note:'派遣プランABCを提案。来週役員プレゼン予定。',rep:'yamamoto',date:ago(10)},
+    {id:'a10',clientId:'n2',type:'訪問',note:'リネン部門の工程見学。4月採用に向けて準備中。',rep:'sato',date:ago(5)},
+    {id:'a11',clientId:'n4',type:'訪問',note:'フォロー訪問。同社は山本さんも接触中。',rep:'suzuki',date:ago(3)},
+    // n4 also yamamoto
+    {id:'a12',clientId:'n1',type:'訪問',note:'山本も接触（バッティング検証用）',rep:'suzuki',date:ago(2)},
+  ];
+  populateSelects();
+  buildRepTabs();
+  updateAll();
+}
+
+// ── SELECTS ──
+function populateSelects(){
+  ['ex-ind','ct-ind','nw-ind'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    el.innerHTML='<option value="">業種</option>'+INDUSTRIES.map(i=>`<option>${i}</option>`).join('');
+  });
+  ['ex-rep','ct-rep'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    el.innerHTML='<option value="">全担当</option>'+REPS.map(r=>`<option value="${r.id}">${r.short}</option>`).join('');
+  });
+  // area selects
+  const exAreas=[...new Set(clients.filter(c=>c.stage==='existing'&&c.area).map(c=>c.area))];
+  const ctAreas=[...new Set(clients.filter(c=>c.stage==='active_contact'&&c.area).map(c=>c.area))];
+  const nwAreas=[...new Set(clients.filter(c=>c.stage==='new'&&c.area).map(c=>c.area))];
+  setAreaSelect('ex-area', exAreas);
+  setAreaSelect('ct-area', ctAreas);
+  setAreaSelect('nw-area', nwAreas);
+}
+function setAreaSelect(id, areas){
+  const el=document.getElementById(id);if(!el)return;
+  el.innerHTML='<option value="">エリア</option>'+areas.map(a=>`<option>${a}</option>`).join('');
+}
+
+// ── REP TABS ──
+function buildRepTabs(){
+  const con=document.getElementById('rep-tabs');if(!con)return;
+  con.innerHTML=`<button class="btn bp bsm" onclick="openModalNew()">＋ 顧客追加</button>`;
+}
+
+// ── UTILS ──
+function avStyle(id){const p=PALETTE[id.charCodeAt(id.length-1)%PALETTE.length];return`background:${p.bg};color:${p.fg}`;}
+function inits(co){return co.replace(/[㈱㈲（）]/g,'').slice(0,2);}
+function daysAgo(d){return d?Math.floor((new Date()-new Date(d))/86400000):null;}
+function thisMonth(d){return d&&d.startsWith(new Date().toISOString().slice(0,7));}
+function lastMonths(n){const r=[];for(let i=n-1;i>=0;i--){const d=new Date();d.setMonth(d.getMonth()-i);r.push(d.toISOString().slice(0,7));}return r;}
+function abadge(t){const m={訪問:'b-gr',提案:'b-bl',電話:'b-gy',メール:'b-gy',会議:'b-pu',その他:'b-gy'};return m[t]||'b-gy';}
+
+// ── CONTACT (visited/proposed only for "接触" counting) ──
+function getLastContactedAction(cid){
+  const a=actions.filter(x=>x.clientId===cid&&(x.type==='訪問'||x.type==='提案'));
+  return a.length?a.sort((a,b)=>b.date.localeCompare(a.date))[0]:null;
+}
+function getLastAnyAction(cid){
+  const a=actions.filter(x=>x.clientId===cid);
+  return a.length?a.sort((a,b)=>b.date.localeCompare(a.date))[0]:null;
+}
+function isContacted(cid){return!!getLastContactedAction(cid);}
+
+// Freshness uses last contacted action date (visit/proposal)
+function freshness(cid){
+  const a=getLastContactedAction(cid);if(!a)return'none';
+  const d=daysAgo(a.date);return d<=30?'active':d<=60?'warn':'cold';
+}
+function frTag(cid){
+  const a=getLastContactedAction(cid),f=freshness(cid);
+  const d=a?daysAgo(a.date):null;
+  const labels={active:'アクティブ',warn:'フォロー要',cold:'休眠',none:'未記録'};
+  return`<div class="fr f${f.charAt(0)}"><div class="frd"></div>${d!==null?`${d}日前`:labels[f]}</div>`;
+}
+function isFreed(cid){
+  const a=getLastContactedAction(cid);
+  return a&&daysAgo(a.date)>CONTACT_EXPIRE_DAYS;
+}
+function daysUntilFree(cid){
+  const a=getLastContactedAction(cid);if(!a)return null;
+  return Math.max(CONTACT_EXPIRE_DAYS-daysAgo(a.date),0);
+}
+function shouldReturnToNew(cid){
+  if(!isFreed(cid))return false;
+  const anyAct=getLastAnyAction(cid);
+  return !anyAct||daysAgo(anyAct.date)>RETURN_TO_NEW_DAYS;
+}
+
+// ── BATTING ──
+function detectBatting(){
+  const map={};
+  clients.filter(c=>c.stage==='active_contact'||c.stage==='new').forEach(c=>{const k=c.company.trim();if(!map[k])map[k]=[];map[k].push(c);});
+  return Object.entries(map).filter(([,g])=>{
+    const reps=new Set();g.forEach(c=>actions.filter(a=>a.clientId===c.id&&(a.type==='訪問'||a.type==='提案')).forEach(a=>reps.add(a.rep)));
+    return reps.size>=2;
+  }).map(([co,g])=>{
+    const reps=new Set();g.forEach(c=>actions.filter(a=>a.clientId===c.id&&(a.type==='訪問'||a.type==='提案')).forEach(a=>reps.add(a.rep)));
+    return{company:co,reps:[...reps],group:g};
+  });
+}
+
+// ── UPDATE ALL ──
+function updateAll(){
+  updateBadges();
+  if(currentPage==='existing')renderExisting();
+  else if(currentPage==='contacted')renderContacted();
+  else if(currentPage==='new')renderNew();
+  else if(currentPage==='batting')renderBatting();
+  else if(currentPage==='dashboard')renderDashboard();
+}
+
+function updateBadges(){
+  const ex=clients.filter(c=>c.stage==='existing');
+  const ct=clients.filter(c=>c.stage==='active_contact');
+  const nw=clients.filter(c=>c.stage==='new');
+  const bt=detectBatting();
+  document.getElementById('nb-ex').textContent=ex.length;
+  document.getElementById('nb-ct').textContent=ct.length;
+  document.getElementById('nb-nw').textContent=nw.length;
+  document.getElementById('nb-bt').textContent=bt.length;
+
+  document.getElementById('s-ex').textContent=ex.length;
+  document.getElementById('s-ac').textContent=ex.filter(c=>c.existingStatus==='アクティブ').length;
+  document.getElementById('s-fw').textContent=ex.filter(c=>c.existingStatus==='要フォロー').length;
+  document.getElementById('s-cl').textContent=ex.filter(c=>c.existingStatus==='休眠').length;
+  document.getElementById('s-am').textContent=actions.filter(a=>thisMonth(a.date)).length;
+
+  const freed=ct.filter(c=>isFreed(c.id));
+  document.getElementById('sc-t').textContent=ct.length;
+  document.getElementById('sc-freed').textContent=freed.length;
+  document.getElementById('sc-p').textContent=ct.filter(c=>c.contactStatus==='検討中'||c.contactStatus==='訪問・提案').length;
+  document.getElementById('sc-c').textContent=clients.filter(c=>c.stage==='existing'&&thisMonth(c.createdAt)).length;
+
+  document.getElementById('sn-t').textContent=nw.length;
+  document.getElementById('sn-called').textContent=nw.filter(c=>actions.some(a=>a.clientId===c.id)).length;
+  document.getElementById('sn-conv').textContent=ct.length;
+  document.getElementById('sn-b').textContent=bt.length;
+
+  const bb=document.getElementById('nw-btban');
+  if(bt.length){bb.style.display='flex';document.getElementById('nw-bttext').textContent=bt.map(b=>`${b.company}（${b.reps.map(repShort).join('・')}）`).join(' ／ ');}
+  else bb.style.display='none';
+}
+
+// ── RENDER EXISTING ──
+function renderExisting(){
+  const q=document.getElementById('ex-q').value.toLowerCase();
+  const rp=document.getElementById('ex-rep').value;
+  const ff=document.getElementById('ex-fr').value;
+  const fi=document.getElementById('ex-ind').value;
+  const fa=document.getElementById('ex-area').value;
+  const frnk=document.getElementById('ex-rank')?.value||'';
+  const fpot=document.getElementById('ex-pot')?.value||'';
+  let list=clients.filter(c=>c.stage==='existing').filter(c=>{
+    return (!q||[c.company,c.contact||'',c.area||''].some(v=>v.toLowerCase().includes(q)))
+      &&(!rp||c.assignee===rp)&&(!ff||c.existingStatus===ff)&&(!fi||c.industry===fi)&&(!fa||c.area===fa)
+      &&(!frnk||c.rank===frnk)&&(!fpot||c.potential===fpot);
+  });
+  const tbody=document.getElementById('ex-tbody'),empty=document.getElementById('ex-empty');
+  if(!list.length){tbody.innerHTML='';empty.style.display='';return;}empty.style.display='none';
+  tbody.innerHTML=list.map(c=>{
+    const l=getLastContactedAction(c.id)?.date;
+    const mc=actions.filter(a=>a.clientId===c.id&&thisMonth(a.date)).length;
+    const rankBadge=c.rank?`<span class="bdg" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a">${c.rank}</span>`:'';;
+    const potBadge=c.potential?`<span class="bdg b-gy" style="margin-left:2px;font-size:9px">${c.potential}</span>`:'';
+    const exStColor={アクティブ:'b-gr',要フォロー:'b-am',休眠:'b-gy',未接触:'b-bl'}[c.existingStatus]||'b-gy';
+    const exStBadge=c.existingStatus?`<span class="bdg ${exStColor}">${c.existingStatus}</span>`:'<span style="color:var(--t3);font-size:10px">—</span>';
+    return`<tr onclick="openDetail('${c.id}')">
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div class="av" style="${avStyle(c.id)};width:30px;height:30px;font-size:11px">${inits(c.company)}</div>
+        <div><div class="tdm">${c.company}</div>${c.branches?`<div class="tds">📍${c.branches}</div>`:''}</div>
+      </div></td>
+      <td style="font-size:11px">${c.area||'—'}</td>
+      <td>${rankBadge}${potBadge}</td>
+      <td>${exStBadge}</td>
+      <td><span class="bdg b-bl">${repShort(c.assignee)||'—'}</span></td>
+      <td><span class="bdg b-gy">${c.industry||'—'}</span></td>
+      <td><div style="font-size:12px;font-weight:500">${c.contact||'—'}</div><div style="font-size:10px;color:var(--t2)">${c.ctitle||''}</div></td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--t2)">${l||'—'}</td>
+      <td>${mc>0?`<span class="bdg b-pu">${mc}件</span>`:'<span style="color:var(--t3);font-size:10px">—</span>'}</td>
+      <td><div class="ra" onclick="event.stopPropagation()">
+        <button class="btn bg_ bxs" onclick="openMini('${c.id}',event,['訪問','提案','電話','メール'],'アクション記録')">⚡記録</button>
+        <button class="btn bg_ bxs" onclick="openDetail('${c.id}')">詳細</button>
+        <button class="btn bd bxs" onclick="deleteClient('${c.id}')">削除</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── RENDER CONTACTED ──
+function resetCtFilters(){
+  document.getElementById('ct-q').value='';
+  document.getElementById('ct-rep').value='';
+  document.getElementById('ct-st').value='';
+  document.getElementById('ct-rank').value='';
+  document.getElementById('ct-ind').value='';
+  document.getElementById('ct-area').value='';
+  document.getElementById('ct-freed-only').checked=false;
+  sortDead=false;
+  document.getElementById('sort-dead-btn').classList.remove('active');
+  renderContacted();
+}
+function toggleDeadSort(){sortDead=!sortDead;document.getElementById('sort-dead-btn').classList.toggle('active',sortDead);renderContacted();}
+function renderContacted(){
+  const q=document.getElementById('ct-q').value.toLowerCase();
+  const rp=document.getElementById('ct-rep').value;
+  const st=document.getElementById('ct-st').value;
+  const frnk=document.getElementById('ct-rank')?.value||'';
+  const fi=document.getElementById('ct-ind').value;
+  const fa=document.getElementById('ct-area').value;
+  const freedOnly=document.getElementById('ct-freed-only').checked;
+  const bt=detectBatting(),btc=bt.map(b=>b.company);
+  let list=clients.filter(c=>c.stage==='active_contact').filter(c=>{
+    const freed=isFreed(c.id);
+    return (!q||[c.company,c.contact||'',c.area||''].some(v=>v.toLowerCase().includes(q)))
+      &&(!rp||c.assignee===rp)&&(!st||c.contactStatus===st)&&(!fi||c.industry===fi)&&(!fa||c.area===fa)&&(!freedOnly||freed)&&(!frnk||c.rank===frnk);
+  });
+  if(sortDead) list=list.sort((a,b)=>(daysUntilFree(a.id)||999)-(daysUntilFree(b.id)||999));
+  const tbody=document.getElementById('ct-tbody'),empty=document.getElementById('ct-empty');
+  if(!list.length){tbody.innerHTML='';empty.style.display='';return;}empty.style.display='none';
+  tbody.innerHTML=list.map(c=>{
+    const l=getLastContactedAction(c.id)?.date;
+    const freed=isFreed(c.id),dtf=daysUntilFree(c.id);
+    const isBt=btc.includes(c.company);
+    const csBadge=c.contactStatus==='提案合わず（未取引）'?'b-or':(c.contactStatus?'b-am':'b-gy');
+    return`<tr class="${freed?'freed-row':''}" onclick="openDetail('${c.id}')">
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div class="av" style="${avStyle(c.id)};width:30px;height:30px;font-size:11px">${inits(c.company)}</div>
+        <div><div class="tdm">${c.company}</div>${isBt?'<span class="bdg b-or" style="margin-top:2px;display:inline-flex">⚠️バッティング</span>':''}</div>
+      </div></td>
+      <td style="font-size:11px">${c.area||'—'}</td>
+      <td><span class="bdg b-gy">${c.industry||'—'}</span></td>
+      <td><span class="bdg b-bl">${repShort(c.assignee)||'—'}</span></td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--t2)">${c.phone||'—'}</td>
+      <td><div style="font-size:12px;font-weight:500">${c.contact||'—'}</div><div style="font-size:10px;color:var(--t2)">${c.ctitle||''}</div></td>
+      <td onclick="event.stopPropagation()">
+        <select class="stage-sel" onchange="changeContactStatus('${c.id}',this.value)">
+          <option value="">—</option>
+          ${CONTACT_SUB.map(s=>`<option value="${s}" ${s===c.contactStatus?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--t2)">${l||'—'}</td>
+      <td>${freed?'<span class="freed-badge">🔓解放済み</span>':frTag(c.id)}</td>
+      <td style="font-family:var(--mono);font-size:10px">${freed?'<span style="color:var(--orange)">誰でもOK</span>':`<span style="color:var(--t2)">${dtf}日後</span>`}</td>
+      <td onclick="event.stopPropagation()">
+        <button class="btn bp bxs" onclick="openMiniContacted('${c.id}',event)">⚡記録</button>
+      </td>
+      <td><div class="ra" onclick="event.stopPropagation()">
+        <button class="btn bg_ bxs" onclick="openDetail('${c.id}')">詳細</button>
+        <button class="btn bd bxs" onclick="deleteClient('${c.id}')">削除</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── RENDER NEW ──
+function resetNwFilters(){
+  document.getElementById('nw-q').value='';
+  document.getElementById('nw-area').value='';
+  selRepFilter='';
+  buildRepTabs();
+  renderNew();
+}
+function renderNew(){
+  const q=document.getElementById('nw-q').value.toLowerCase();
+  const fa=document.getElementById('nw-area').value;
+  const bt=detectBatting(),btc=bt.map(b=>b.company);
+  let list=clients.filter(c=>c.stage==='new').filter(c=>{
+    return (!q||[c.company,c.area||''].some(v=>v.toLowerCase().includes(q)))&&(!fa||c.area===fa);
+  });
+  const tbody=document.getElementById('nw-tbody'),empty=document.getElementById('nw-empty');
+  if(!list.length){tbody.innerHTML='';empty.style.display='';return;}empty.style.display='none';
+  tbody.innerHTML=list.map(c=>{
+    const cActs=actions.filter(a=>a.clientId===c.id).sort((a,b)=>b.date.localeCompare(a.date));
+    const la=cActs[0];
+    return`<tr onclick="openDetail('${c.id}')">
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div class="av" style="${avStyle(c.id)};width:30px;height:30px;font-size:11px">${inits(c.company)}</div>
+        <div class="tdm">${c.company}</div>
+      </div></td>
+      <td style="font-size:11px">${c.area||'—'}</td>
+      <td><span class="bdg b-gy">${c.industry||'—'}</span></td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--t2)">${c.phone||'—'}</td>
+      <td>${la
+        ?`<div style="font-size:10px;font-family:var(--mono);color:var(--t3)">${la.date}</div><div style="display:flex;align-items:center;gap:3px;margin-top:1px"><span class="bdg ${abadge(la.type)}">${la.type}</span><span style="font-size:11px;font-weight:500">${repShort(la.rep)}</span></div>`
+        :`<span style="color:var(--t3);font-size:10px">未架電</span>`}
+      </td>
+      <td>
+        <div class="memo-cell" onclick="event.stopPropagation();this.classList.toggle('expanded')">${c.memo||'—'}</div>
+      </td>
+      <td onclick="event.stopPropagation()">
+        <button class="btn bp bxs" onclick="quickCall('${c.id}',event)">📞 架電</button>
+      </td>
+      <td><div class="ra" onclick="event.stopPropagation()">
+        <button class="btn bg_ bxs" onclick="openDetail('${c.id}')">詳細</button>
+        <button class="btn bd bxs" onclick="deleteClient('${c.id}')">削除</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── BATTING ──
+function renderBatting(){
+  const bt=detectBatting();
+  const con=document.getElementById('bt-list'),emp=document.getElementById('bt-empty');
+  if(!bt.length){con.innerHTML='';emp.style.display='';return;}emp.style.display='none';
+  con.innerHTML=bt.map(b=>`
+    <div style="background:var(--surface);border:2px solid #fed7aa;border-radius:var(--r);padding:14px 16px;margin-bottom:10px;box-shadow:var(--sh)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:16px">⚠️</span>
+        <div><div style="font-weight:700;font-size:13px">${b.company}</div>
+        <div style="font-size:11px;color:var(--amber);margin-top:1px">${b.reps.map(repShort).join(' と ')} が同一企業に訪問・提案を記録</div></div>
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">${b.reps.map(r=>`<span class="bdg b-bl">👤${repShort(r)}</span>`).join('')}</div>
+      <div style="background:var(--s2);border-radius:6px;padding:8px">
+        ${b.group.flatMap(c=>actions.filter(a=>a.clientId===c.id&&(a.type==='訪問'||a.type==='提案')))
+          .sort((a,b_)=>b_.date.localeCompare(a.date)).slice(0,5)
+          .map(a=>`<div style="display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid var(--border);font-size:11px;flex-wrap:wrap">
+            <span style="font-family:var(--mono);color:var(--t3);width:76px">${a.date}</span>
+            <span class="bdg ${abadge(a.type)}">${a.type}</span>
+            <span style="font-weight:500">${repShort(a.rep)}</span>
+            <span style="color:var(--t2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.note}</span>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+// ── DASHBOARD ──
+function renderDashboard(){
+  document.getElementById('db-upd').textContent=new Date().toLocaleString('ja-JP');
+  const nw=clients.filter(c=>c.stage==='new');
+  const ex=clients.filter(c=>c.stage==='existing');
+  const ct=clients.filter(c=>c.stage==='active_contact');
+  const bt=detectBatting();
+  const mnActs=actions.filter(a=>thisMonth(a.date)&&(a.type==='訪問'||a.type==='提案'));
+
+  // Total = existing clients only
+  document.getElementById('db-total').textContent=ex.length;
+
+  // Workers and orders from active jobs
+  const activeJobs=jobs.filter(j=>j.status==='active');
+  document.getElementById('db-workers').textContent=activeJobs.reduce((s,j)=>s+Number(j.activeWorkers||0),0);
+  document.getElementById('db-orders').textContent=activeJobs.length;
+
+  // New contacts this month: active_contact clients with first action this month
+  const newContacts=ct.filter(c=>{
+    const acts=actions.filter(a=>a.clientId===c.id&&(a.type==='訪問'||a.type==='提案')&&thisMonth(a.date));
+    return acts.length>0;
+  }).length;
+  document.getElementById('db-nc').textContent=newContacts;
+
+  // Proposals = distinct companies where proposal was sent this month
+  const proposalCos=new Set(actions.filter(a=>a.type==='提案'&&thisMonth(a.date)).map(a=>a.clientId));
+  document.getElementById('db-prop').textContent=proposalCos.size;
+
+  // New wins this month = clients who moved to existing this month
+  const conv=clients.filter(c=>c.stage==='existing'&&thisMonth(c.createdAt));
+  document.getElementById('db-conv').textContent=conv.length;
+  document.getElementById('db-bat').textContent=bt.length;
+
+  // LEADERBOARD - new contacts per rep this month (card style)
+  const medals=['🥇','🥈','🥉','',''];
+  const lb=REPS.map(r=>{
+    const nc=ct.filter(c=>actions.some(a=>a.clientId===c.id&&a.rep===r.id&&(a.type==='訪問'||a.type==='提案')&&thisMonth(a.date))).length;
+    const pr=actions.filter(a=>a.rep===r.id&&a.type==='提案'&&thisMonth(a.date)).length;
+    const total=mnActs.filter(a=>a.rep===r.id).length;
+    return{r,nc,pr,total};
+  }).sort((a,b)=>b.nc-a.nc||b.total-a.total);
+  document.getElementById('db-leader').innerHTML=lb.map((x,i)=>`
+    <div style="background:${i===0?'linear-gradient(135deg,var(--accent),#6366f1)':i===1?'linear-gradient(135deg,#64748b,#94a3b8)':i===2?'linear-gradient(135deg,var(--amber),#f59e0b)':'var(--s2)'};color:${i<3?'#fff':'var(--text)'};border-radius:10px;padding:14px 12px;text-align:center;border:1px solid ${i<3?'transparent':'var(--border)'}">
+      <div style="font-size:18px;margin-bottom:4px">${medals[i]||'👤'}</div>
+      <div style="font-family:var(--disp);font-size:14px;font-weight:700;margin-bottom:6px">${x.r.short}</div>
+      <div style="font-size:20px;font-weight:800;font-family:var(--disp);margin-bottom:2px">${x.nc}</div>
+      <div style="font-size:9px;opacity:.8;margin-bottom:6px">新規接触</div>
+      <div style="font-size:10px;opacity:.7">${x.pr}提案 / ${x.total}件</div>
+    </div>`).join('');
+
+  // Rep bars (action count)
+  const repActs=REPS.map(r=>({r,cnt:mnActs.filter(a=>a.rep===r.id).length})).sort((a,b)=>b.cnt-a.cnt);
+  const maxR=Math.max(...repActs.map(x=>x.cnt),1);
+  document.getElementById('db-repbars').innerHTML=repActs.map(x=>`
+    <div class="bar-row"><div class="bar-label">${x.r.short}</div>
+    <div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(x.cnt/maxR*100)}%;background:var(--accent)">${x.cnt>0?`<span class="bar-text">${x.cnt}件</span>`:''}</div></div>
+    <div class="bar-val">${x.cnt}</div></div>`).join('');
+
+  // Existing status breakdown
+  const fa2=ex.filter(c=>c.existingStatus==='アクティブ').length;
+  const fw=ex.filter(c=>c.existingStatus==='要フォロー').length;
+  const fc=ex.filter(c=>c.existingStatus==='休眠').length;
+  const fn=ex.filter(c=>c.existingStatus==='未接触'||!c.existingStatus).length;
+  document.getElementById('db-fresh').innerHTML=`
+    <div class="kpi-mini" style="background:var(--gl)"><div class="val" style="color:var(--green)">${fa2}</div><div class="lbl">🟢 アクティブ</div></div>
+    <div class="kpi-mini" style="background:var(--al)"><div class="val" style="color:var(--amber)">${fw}</div><div class="lbl">🟡 要フォロー</div></div>
+    <div class="kpi-mini" style="background:var(--rl)"><div class="val" style="color:var(--red)">${fc}</div><div class="lbl">🔴 休眠</div></div>
+    <div class="kpi-mini" style="background:var(--grl)"><div class="val" style="color:var(--gray)">${fn}</div><div class="lbl">⚪ 未接触</div></div>`;
+
+  // Industry bars
+  const indC={};clients.forEach(c=>{if(c.industry)indC[c.industry]=(indC[c.industry]||0)+1;});
+  const indS=Object.entries(indC).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxI=Math.max(...indS.map(x=>x[1]),1);
+  const iC=['var(--accent)','var(--teal)','var(--green)','var(--amber)','var(--purple)','var(--red)'];
+  document.getElementById('db-indbars').innerHTML=indS.map(([ind,cnt],i)=>`
+    <div class="bar-row"><div class="bar-label" style="font-size:10px">${ind.replace('・','/')}</div>
+    <div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(cnt/maxI*100)}%;background:${iC[i%iC.length]}">${cnt>0?`<span class="bar-text">${cnt}社</span>`:''}</div></div>
+    <div class="bar-val">${cnt}</div></div>`).join('');
+
+  // Trend
+  const months=lastMonths(6);
+  const mC=months.map(m=>actions.filter(a=>a.date.startsWith(m)&&(a.type==='訪問'||a.type==='提案')).length);
+  const maxM=Math.max(...mC,1);
+  document.getElementById('db-trend').innerHTML=`
+    <div style="display:flex;align-items:flex-end;gap:4px;height:70px">
+      ${months.map((m,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+        <div style="font-size:9px;font-family:var(--mono);color:var(--t3)">${mC[i]}</div>
+        <div style="width:100%;background:${m===new Date().toISOString().slice(0,7)?'var(--accent)':'var(--border2)'};border-radius:3px 3px 0 0;height:${Math.max(Math.round(mC[i]/maxM*50),4)}px"></div>
+        <div style="font-size:9px;font-family:var(--mono);color:var(--t3)">${m.slice(5)}月</div>
+      </div>`).join('')}
+    </div>`;
+}
+
+// ── QUICK MINI MODAL ──
+function openMini(cid,ev,types,title){
+  ev&&ev.stopPropagation();
+  miniClientId=cid;miniAT=types[0];
+  const c=clients.find(x=>x.id===cid);
+  document.getElementById('mini-title').textContent=`⚡ ${title} — ${c?.company||''}`;
+  document.getElementById('mini-note').value='';
+  document.getElementById('mini-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('mini-rep').innerHTML=REPS.map(r=>`<option value="${r.id}" ${r.id===(c?.assignee||'')?'selected':''}>${r.short}</option>`).join('');
+  const btns=document.getElementById('mini-type-btns');
+  btns.innerHTML=types.map(t=>`<button class="atb ${t===miniAT?'sel':''}" onclick="selMiniAT(this,'${t}')">${t}</button>`).join('');
+  document.getElementById('mini-modal').classList.add('open');
+}
+function openMiniContacted(cid,ev){openMini(cid,ev,['訪問','提案'],'接触記録');}
+function openMiniNew(cid,ev){openMini(cid,ev,['電話','訪問','提案','メール'],'架電記録');}
+function openMiniExisting(cid,ev){openMini(cid,ev,['訪問','提案','電話','メール'],'アクション記録');}
+function selMiniAT(btn,t){miniAT=t;btn.closest('div').querySelectorAll('.atb').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');}
+function saveMini(){
+  const note=document.getElementById('mini-note').value.trim()||'—';
+  const date=document.getElementById('mini-date').value||new Date().toISOString().slice(0,10);
+  const rep=document.getElementById('mini-rep').value;
+  actions.push({id:'a'+Date.now(),clientId:miniClientId,type:miniAT,note,rep,date});
+  // If new client and action is 訪問/提案 → promote stage to contacted if still new
+  closeMini();updateAll();
+}
+function closeMini(){document.getElementById('mini-modal').classList.remove('open');miniClientId=null;}
+
+// ── DETAIL ──
+function openDetail(cid){
+  const c=clients.find(x=>x.id===cid);if(!c)return;
+  openDetailId=cid;
+  const av=document.getElementById('d-av');
+  av.setAttribute('style',avStyle(c.id)+';width:36px;height:36px;font-size:13px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-weight:700;flex-shrink:0');
+  av.textContent=inits(c.company);
+  document.getElementById('d-name').textContent=c.company;
+  const stLbl=stageLabel(c.stage)+(c.contactStatus?` › ${c.contactStatus}`:c.existingStatus?` › ${c.existingStatus}`:'');
+  document.getElementById('d-sub').textContent=[c.industry,c.area,stLbl].filter(Boolean).join(' · ');
+  const cActs=actions.filter(a=>a.clientId===cid).sort((a,b)=>b.date.localeCompare(a.date));
+  const freed=c.stage==='active_contact'&&isFreed(cid);
+  const rankBadge=c.rank?`<span class="bdg" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a">${c.rank}</span> `:'';
+  const potBadge=c.potential?`<span class="bdg b-gy">${c.potential}</span>`:'';
+  document.getElementById('d-body').innerHTML=`
+    <div class="ds">
+      <div class="dst">企業情報</div>
+      <div class="dr"><span class="drl">ステータス</span><span class="drv"><span class="bdg ${stageBadge(c.stage)}">${stageLabel(c.stage)}</span>${c.contactStatus?` <span class="bdg b-or" style="font-size:9px">${c.contactStatus}</span>`:''}${c.existingStatus?` <span class="bdg b-tl" style="font-size:9px">${c.existingStatus}</span>`:''}</span></div>
+      ${rankBadge||potBadge?`<div class="dr"><span class="drl">ランク / 将来性</span><span class="drv">${rankBadge}${potBadge}</span></div>`:''}
+      <div class="dr"><span class="drl">電話</span><span class="drv" style="font-family:var(--mono);font-size:11px">${c.phone||'—'}</span></div>
+      <div class="dr"><span class="drl">メール</span><span class="drv" style="font-family:var(--mono);font-size:11px">${c.email||'—'}</span></div>
+      <div class="dr"><span class="drl">担当窓口</span><span class="drv">${c.contact||'—'}${c.ctitle?` <span style="color:var(--t2);font-size:10px">/ ${c.ctitle}</span>`:''}</span></div>
+      <div class="dr"><span class="drl">業種</span><span class="drv">${c.industry||'—'}</span></div>
+      <div class="dr"><span class="drl">規模</span><span class="drv">${c.scale||'—'}</span></div>
+      <div class="dr"><span class="drl">拠点</span><span class="drv">${c.branches||'—'}</span></div>
+      <div class="dr"><span class="drl">エリア</span><span class="drv">${c.area||'—'}</span></div>
+      ${c.addr?`<div class="dr"><span class="drl">住所</span><span class="drv" style="font-size:10px">${c.addr}</span></div>`:''}
+      ${c.web?`<div class="dr"><span class="drl">Web</span><span class="drv"><a href="${c.web}" target="_blank" style="color:var(--accent);font-size:10px">${c.web}</a></span></div>`:''}
+      <div class="dr"><span class="drl">自社担当</span><span class="drv"><span class="bdg b-bl">${repShort(c.assignee)||'—'}</span></span></div>
+      <div class="dr"><span class="drl">ステータス変更</span><span class="drv">
+        <select class="arsel" onchange="changeStage('${c.id}',this.value)">
+          ${STAGES_ALL.map(s=>`<option value="${s}" ${s===c.stage?'selected':''}>${stageLabel(s)}</option>`).join('')}
+        </select></span></div>
+      ${freed?`<div style="background:var(--ol);border:1px solid #fed7aa;border-radius:6px;padding:7px 9px;margin-top:7px;font-size:11px;color:var(--orange)">🔓 解放済み：45日以上経過。誰でも接触できます。</div>`:''}
+      ${c.memo?`<div style="margin-top:8px;padding:8px;background:var(--s2);border-radius:7px;font-size:11px;color:var(--t2);line-height:1.6"><strong>📝 ナレッジ</strong><br>${c.memo}</div>`:''}
+    </div>
+    <div class="ds">
+      <div class="dst" style="display:flex;align-items:center;justify-content:space-between">
+        <span>アクション記録（${cActs.length}件）</span>
+        <button class="btn bp bxs" onclick="openMini('${cid}',null,['訪問','提案','電話','メール'],'記録')">⚡ 追加</button>
+      </div>
+      ${!cActs.length?'<div style="color:var(--t3);font-size:11px;text-align:center;padding:8px">まだアクションがありません</div>'
+        :`<div class="tl">${cActs.map(a=>`
+          <div class="tli">
+            <div class="tll">
+              <div class="tld" style="background:${a.type==='訪問'?'var(--green)':a.type==='提案'?'var(--accent)':a.type==='電話'?'var(--teal)':'var(--border2)'}"></div>
+              <div class="tln_"></div>
+            </div>
+            <div class="tlb">
+              <div style="display:flex;align-items:center;gap:4px;margin-bottom:2px">
+                <span class="bdg ${abadge(a.type)}">${a.type}</span>
+                <span style="font-size:11px;font-weight:600">${repShort(a.rep)}</span>
+              </div>
+              <div class="tlnt">${a.note}</div>
+              <div class="tlm">${a.date}</div>
+            </div>
+          </div>`).join('')}</div>`}
+    </div>
+    <div class="ds" style="border-bottom:none">
+      <button class="btn bd bsm" onclick="deleteClient('${cid}')">🗑 削除</button>
+    </div>`;
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('detail').classList.add('open');
+}
+function closeDetail(){document.getElementById('overlay').classList.remove('open');document.getElementById('detail').classList.remove('open');openDetailId=null;}
+function editCurrent(){if(!openDetailId)return;const c=clients.find(x=>x.id===openDetailId);closeDetail();openModal(c,'edit');}
+function changeStage(id,stage){
+  const c=clients.find(x=>x.id===id);if(!c)return;
+  c.stage=stage;
+  if(stage==='existing'){c.createdAt=new Date().toISOString().slice(0,10);}
+  updateAll();
+}
+function changeContactStatus(id,cs){
+  const c=clients.find(x=>x.id===id);if(!c)return;
+  c.contactStatus=cs;
+  updateAll();
+}
+function resetExFilters(){
+  document.getElementById('ex-q').value='';
+  document.getElementById('ex-rep').value='';
+  document.getElementById('ex-fr').value='';
+  document.getElementById('ex-ind').value='';
+  document.getElementById('ex-area').value='';
+  document.getElementById('ex-rank').value='';
+  document.getElementById('ex-pot').value='';
+  renderExisting();
+}
+
+// ── ACTION ──
+function selAT(btn,t){selectedAT=t;btn.closest('.atr').querySelectorAll('.atb').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');}
+function addAction(cid){
+  const note=document.getElementById(`an-${cid}`)?.value.trim();
+  const date=document.getElementById(`ad-${cid}`)?.value;
+  const rep=document.getElementById(`ar-${cid}`)?.value;
+  if(!note){alert('内容を入力してください');return;}
+  actions.push({id:'a'+Date.now(),clientId:cid,type:selectedAT,note,rep,date:date||new Date().toISOString().slice(0,10)});
+  updateAll();openDetail(cid);
+}
+
+// ── QUICK CALL (teleapo one-click) ──
+// Shows inline mini form pre-set to 電話, single memo field
+function quickCall(cid, ev){
+  ev&&ev.stopPropagation();
+  openMini(cid, null, ['電話','訪問','提案','メール'], '架電記録');
+}
+
+// ── DUPE CHECK ──
+function checkDupe(){
+  const val=document.getElementById('f-co').value.trim().toLowerCase().replace(/[㈱㈲\s]/g,'');
+  const al=document.getElementById('dupe-alert');
+  if(!val||val.length<2){al.classList.remove('show');return;}
+  const dupes=clients.filter(c=>c.id!==editingId&&c.company.toLowerCase().replace(/[㈱㈲\s]/g,'').includes(val)||val.includes(c.company.toLowerCase().replace(/[㈱㈲\s]/g,'').slice(0,3)));
+  if(dupes.length){document.getElementById('dupe-msg').innerHTML=`類似企業が登録済み：<strong>${[...new Set(dupes.map(c=>c.company))].join('、')}</strong>`;al.classList.add('show');}
+  else al.classList.remove('show');
+}
+
+// ── CP ──
+function openCP(target){
+  _cpTarget=target||'ed';
+  const existing=[...new Map(clients.filter(c=>c.contact).map(c=>([c.contact,{name:c.contact,title:c.ctitle||''}]))).values()];
+  const all=[...DEFAULT_CONTACTS,...existing].reduce((acc,cp)=>{if(!acc.find(x=>x.name===cp.name))acc.push(cp);return acc;},[]);
+  document.getElementById('cp-name').value='';document.getElementById('cp-ttl').value='';
+  document.getElementById('cp-grid').innerHTML=all.map((cp,i)=>`
+    <div class="cpi" onclick="selCP('${cp.name}','${cp.title||''}')">
+      <div class="av" style="${avStyle('c'+i)};width:28px;height:28px;font-size:11px">${cp.name.slice(0,1)}</div>
+      <div><div style="font-weight:500;font-size:12px">${cp.name}</div><div style="font-size:10px;color:var(--t2)">${cp.title||'役職未設定'}</div></div>
+    </div>`).join('');
+  document.getElementById('cp-modal').classList.add('open');
+}
+function selCP(name,title){
+  const sfx=_cpTarget==='ex'?'-ex':'';
+  const dispId=_cpTarget==='ex'?'f-cdisplay-ex':'f-cdisplay';
+  document.getElementById('f-contact'+sfx).value=name;
+  document.getElementById('f-ctitle'+sfx).value=title;
+  document.getElementById(dispId).value=title?`${name}（${title}）`:name;
+  closeCP();
+}
+function selectCPManual(){
+  const n=document.getElementById('cp-name').value.trim(),t=document.getElementById('cp-ttl').value.trim();
+  if(!n){alert('氏名を入力してください');return;}selCP(n,t);
+}
+function closeCP(){document.getElementById('cp-modal').classList.remove('open');}
+
+// ── CLIENT MODAL ──
+// _modalMode: 'new' | 'contact' | 'existing' | 'edit'
+let _modalMode='new';
+let _cpTarget='ed'; // which CP modal is for
+
+function openModalForPage(){
+  const m={'existing':'existing','contacted':'contact','new':'new'};
+  const mode=m[currentPage]||'new';
+  openModal(null, mode);
+}
+function openModalNew(){ openModal(null,'new'); }
+function openModalContact(){ openModal(null,'contact'); }
+function openModalExisting(){ openModal(null,'existing'); }
+
+function setModalMode(mode){
+  ['new','contact','existing','edit'].forEach(m=>{
+    const el=document.getElementById('f-mode-'+m);
+    if(el) el.style.display=m===mode?'':'none';
+  });
+}
+function repOpts(selId, selVal){
+  return REPS.map(r=>`<option value="${r.id}" ${r.id===selVal?'selected':''}>${r.short}</option>`).join('');
+}
+function indOpts(selId, selVal){
+  return '<option value="">—</option>'+INDUSTRIES.map(i=>`<option ${i===selVal?'selected':''}>${i}</option>`).join('');
+}
+
+function openModal(c=null, mode='edit'){
+  _modalMode=mode;
+  editingId=c?c.id:null;
+  document.getElementById('dupe-alert').classList.remove('show');
+  const info=document.getElementById('f-stage-info');
+
+  if(c){
+    // Edit mode
+    setModalMode('edit');
+    info.style.display='none';
+    document.getElementById('modal-title').textContent='顧客を編集';
+    const repSel=REPS.map(r=>`<option value="${r.id}" ${r.id===c.assignee?'selected':''}>${r.short}</option>`).join('');
+    document.getElementById('f-co-ed').value=c.company||'';
+    document.getElementById('f-phone-ed').value=c.phone||'';
+    document.getElementById('f-email-ed').value=c.email||'';
+    document.getElementById('f-area-ed').value=c.area||'';
+    document.getElementById('f-addr-ed').value=c.addr||'';
+    document.getElementById('f-web-ed').value=c.web||'';
+    document.getElementById('f-memo-ed').value=c.memo||'';
+    document.getElementById('f-branches-ed').value=c.branches||'';
+    document.getElementById('f-ind-ed').innerHTML=indOpts('f-ind-ed',c.industry||'');
+    document.getElementById('f-scl-ed').value=c.scale||'';
+    document.getElementById('f-stage-ed').value=c.stage||'new';
+    document.getElementById('f-contact-status-ed').value=c.contactStatus||'';
+    document.getElementById('f-existing-status-ed').value=c.existingStatus||'';
+    document.getElementById('f-contact').value=c.contact||'';
+    document.getElementById('f-ctitle').value=c.ctitle||'';
+    document.getElementById('f-cdisplay').value=c.contact?(c.ctitle?`${c.contact}（${c.ctitle}）`:c.contact):'';
+    document.getElementById('f-assignee-ed').innerHTML='<option value="">—</option>'+repSel;
+    document.getElementById('f-rank-ed').value=c.rank||'';
+    document.getElementById('f-pot-ed').value=c.potential||'';
+    onEditStageChange();
+  } else if(mode==='new'){
+    setModalMode('new');
+    info.style.display='';
+    info.textContent='📞 ステータス「新規」で登録します。社名・電話・エリアのみ必須です。';
+    document.getElementById('modal-title').textContent='📞 新規顧客を追加';
+    document.getElementById('f-co').value='';
+    document.getElementById('f-phone').value='';
+    document.getElementById('f-area-new').value='';
+    document.getElementById('f-memo-new').value='';
+    document.getElementById('f-assignee-new').innerHTML='<option value="">—</option>'+repOpts('f-assignee-new','');
+  } else if(mode==='contact'){
+    setModalMode('contact');
+    info.style.display='';
+    info.textContent='🤝 ステータス「接触中」で固定登録します。';
+    document.getElementById('modal-title').textContent='🤝 接触中として追加';
+    document.getElementById('f-co-ct').value='';
+    document.getElementById('f-phone-ct').value='';
+    document.getElementById('f-contact-status').value='';
+    document.getElementById('f-ind-ct').innerHTML=indOpts('f-ind-ct','');
+    document.getElementById('f-area-ct').value='';
+    document.getElementById('f-scl-ct').value='';
+    document.getElementById('f-assignee-ct').innerHTML='<option value="">—</option>'+repOpts('f-assignee-ct','');
+    document.getElementById('f-rank-ct').value='';
+    document.getElementById('f-pot-ct').value='';
+    document.getElementById('f-memo-ct').value='';
+  } else if(mode==='existing'){
+    setModalMode('existing');
+    info.style.display='';
+    info.textContent='🏢 ステータス「既存」で固定登録します。';
+    document.getElementById('modal-title').textContent='🏢 既存顧客を追加';
+    document.getElementById('f-co-ex').value='';
+    document.getElementById('f-phone-ex').value='';
+    document.getElementById('f-existing-status').value='';
+    document.getElementById('f-ind-ex').innerHTML=indOpts('f-ind-ex','');
+    document.getElementById('f-area-ex').value='';
+    document.getElementById('f-scl-ex').value='';
+    document.getElementById('f-assignee-ex').innerHTML='<option value="">—</option>'+repOpts('f-assignee-ex','');
+    document.getElementById('f-rank-ex').value='';
+    document.getElementById('f-pot-ex').value='';
+    document.getElementById('f-cdisplay-ex').value='';
+    document.getElementById('f-contact-ex').value='';
+    document.getElementById('f-ctitle-ex').value='';
+    document.getElementById('f-memo-ex').value='';
+  }
+  document.getElementById('client-modal').classList.add('open');
+}
+
+function onEditStageChange(){
+  const stage=document.getElementById('f-stage-ed').value;
+  document.getElementById('f-ed-csub').style.display=stage==='active_contact'?'':'none';
+  document.getElementById('f-ed-exsub').style.display=stage==='existing'?'':'none';
+}
+
+function closeModal(){document.getElementById('client-modal').classList.remove('open');editingId=null;}
+
+function checkDupeCt(){ _checkDupeFor(document.getElementById('f-co-ct')?.value,'dupe-alert'); }
+function checkDupeEx(){ _checkDupeFor(document.getElementById('f-co-ex')?.value,'dupe-alert'); }
+function checkDupeEd(){ _checkDupeFor(document.getElementById('f-co-ed')?.value,'dupe-alert'); }
+function _checkDupeFor(val){
+  val=(val||'').trim().toLowerCase().replace(/[㈱㈲\s]/g,'');
+  const al=document.getElementById('dupe-alert');
+  if(!val||val.length<2){al.classList.remove('show');return;}
+  const dupes=clients.filter(c=>c.id!==editingId&&(c.company.toLowerCase().replace(/[㈱㈲\s]/g,'').includes(val)||val.includes(c.company.toLowerCase().replace(/[㈱㈲\s]/g,'').slice(0,3))));
+  if(dupes.length){document.getElementById('dupe-msg').innerHTML=`類似企業が登録済み：<strong>${[...new Set(dupes.map(c=>c.company))].join('、')}</strong>`;al.classList.add('show');}
+  else al.classList.remove('show');
+}
+
+function saveClient(){
+  let data={};
+  if(_modalMode==='new'||editingId===null&&_modalMode==='new'){
+    const co=document.getElementById('f-co').value.trim();
+    if(!co){document.getElementById('f-co').classList.add('err');alert('会社名は必須です');return;}
+    document.getElementById('f-co').classList.remove('err');
+    const phone=document.getElementById('f-phone').value.trim();
+    if(!phone){document.getElementById('f-phone').classList.add('err');alert('電話番号は必須です');return;}
+    document.getElementById('f-phone').classList.remove('err');
+    data={stage:'new',company:co,phone,area:document.getElementById('f-area-new').value.trim(),memo:document.getElementById('f-memo-new').value.trim(),assignee:document.getElementById('f-assignee-new').value,rank:'',potential:'',industry:'',scale:'',branches:'',contact:'',ctitle:'',email:'',addr:'',web:'',contactStatus:'',existingStatus:''};
+  } else if(_modalMode==='contact'){
+    const co=document.getElementById('f-co-ct').value.trim();
+    if(!co){alert('会社名は必須です');return;}
+    const cs=document.getElementById('f-contact-status').value;
+    if(!cs){alert('サブステータスを選択してください');return;}
+    data={stage:'active_contact',contactStatus:cs,company:co,phone:document.getElementById('f-phone-ct').value.trim(),industry:document.getElementById('f-ind-ct').value,area:document.getElementById('f-area-ct').value.trim(),scale:document.getElementById('f-scl-ct').value,assignee:document.getElementById('f-assignee-ct').value,rank:document.getElementById('f-rank-ct').value,potential:document.getElementById('f-pot-ct').value,memo:document.getElementById('f-memo-ct').value.trim(),branches:'',contact:'',ctitle:'',email:'',addr:'',web:'',existingStatus:''};
+  } else if(_modalMode==='existing'){
+    const co=document.getElementById('f-co-ex').value.trim();
+    if(!co){alert('会社名は必須です');return;}
+    const es=document.getElementById('f-existing-status').value;
+    if(!es){alert('接触状況を選択してください');return;}
+    data={stage:'existing',existingStatus:es,company:co,phone:document.getElementById('f-phone-ex').value.trim(),industry:document.getElementById('f-ind-ex').value,area:document.getElementById('f-area-ex').value.trim(),scale:document.getElementById('f-scl-ex').value,assignee:document.getElementById('f-assignee-ex').value,rank:document.getElementById('f-rank-ex').value,potential:document.getElementById('f-pot-ex').value,contact:document.getElementById('f-contact-ex').value.trim(),ctitle:document.getElementById('f-ctitle-ex').value.trim(),memo:document.getElementById('f-memo-ex').value.trim(),branches:'',email:'',addr:'',web:'',contactStatus:''};
+  } else {
+    // edit mode
+    const co=document.getElementById('f-co-ed').value.trim();
+    if(!co){alert('会社名は必須です');return;}
+    const stage=document.getElementById('f-stage-ed').value;
+    data={stage,contactStatus:stage==='active_contact'?document.getElementById('f-contact-status-ed').value:'',existingStatus:stage==='existing'?document.getElementById('f-existing-status-ed').value:'',company:co,phone:document.getElementById('f-phone-ed').value.trim(),email:document.getElementById('f-email-ed').value.trim(),area:document.getElementById('f-area-ed').value.trim(),addr:document.getElementById('f-addr-ed').value.trim(),web:document.getElementById('f-web-ed').value.trim(),memo:document.getElementById('f-memo-ed').value.trim(),branches:document.getElementById('f-branches-ed').value.trim(),industry:document.getElementById('f-ind-ed').value,scale:document.getElementById('f-scl-ed').value,contact:document.getElementById('f-contact').value.trim(),ctitle:document.getElementById('f-ctitle').value.trim(),assignee:document.getElementById('f-assignee-ed').value,rank:document.getElementById('f-rank-ed').value,potential:document.getElementById('f-pot-ed').value};
+  }
+  if(editingId){const idx=clients.findIndex(c=>c.id===editingId);clients[idx]={...clients[idx],...data};}
+  else{data.id='c'+Date.now();data.createdAt=new Date().toISOString().slice(0,10);clients.push(data);}
+  closeModal();populateSelects();buildRepTabs();updateAll();
+}
+function deleteClient(id){
+  if(!confirm('この顧客を削除しますか？'))return;
+  clients=clients.filter(c=>c.id!==id);actions=actions.filter(a=>a.clientId!==id);
+  closeDetail();updateAll();
+}
+
+// ── PAGE NAV ──
+function showPage(page,btn){
+  currentPage=page;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(btn)btn.classList.add('active');
+  closeDetail();
+  const titles={dashboard:'ダッシュボード',existing:'既存顧客',contacted:'接触中',new:'新規（テレアポ）',batting:'バッティング一覧',jobs:'求人一覧',jobdash:'費用・ROI分析',kpi:'目標・KPI管理',settings:'⚙ 設定'};
+  document.getElementById('page-title').textContent=titles[page]||page;
+  document.getElementById('add-btn').style.display=['new','batting','dashboard','jobs','jobdash','kpi','settings'].includes(page)?'none':'';
+  updateAll();
+  if(page==='jobs'){populateJobSelects();renderJobs();}
+  else if(page==='jobdash'){populateJobSelects();renderJobDash();}
+  else if(page==='kpi'){renderKpiPage();}
+  else if(page==='settings'){renderSettings();}
+}
+
+// overlay click-to-close listeners are registered in DOMContentLoaded (see end of script)
+
+// ============================================================
+// JOB MANAGEMENT MODULE
+// ============================================================
+let MEDIA_LIST = [
+  {id:'indeed',    name:'Indeed',       color:'var(--accent)'},
+  {id:'mynavi',    name:'マイナビ転職',  color:'var(--red)'},
+  {id:'hello',     name:'ハローワーク',  color:'var(--green)'},
+  {id:'townwork',  name:'タウンワーク',  color:'var(--orange)'},
+  {id:'rikunabi',  name:'リクナビ',      color:'#0ea5e9'},
+  {id:'baitoru',   name:'バイトル',      color:'var(--purple)'},
+  {id:'other',     name:'その他',        color:'var(--gray)'},
+];
+const mediaName = id => MEDIA_LIST.find(m=>m.id===id)?.name || id;
+const mediaColor = id => MEDIA_LIST.find(m=>m.id===id)?.color || 'var(--gray)';
+
+let jobs = [];
+let editingJobId = null;
+
+function initJobs(){
+  const ago=n=>{const d=new Date();d.setDate(d.getDate()-n);return d.toISOString().slice(0,10)};
+  const fwd=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)};
+  jobs = [
+    {id:'j1',clientId:'e1',title:'フォークリフトオペレーター（夜勤可）',media:'indeed',status:'active',start:ago(20),end:fwd(10),cost:150000,target:3,apps:18,hired:2,activeWorkers:2,kobot:'',note:'夜勤手当あり。免許必須。',createdAt:ago(20)},
+    {id:'j2',clientId:'e1',title:'倉庫作業員 一般（日勤）',media:'townwork',status:'active',start:ago(15),end:fwd(15),cost:80000,target:5,apps:11,hired:1,activeWorkers:1,kobot:'',note:'',createdAt:ago(15)},
+    {id:'j3',clientId:'e2',title:'製造ライン作業員（固定シフト）',media:'indeed',status:'active',start:ago(30),end:fwd(0),cost:120000,target:4,apps:22,hired:3,activeWorkers:3,kobot:'',note:'東大阪 工場内。',createdAt:ago(30)},
+    {id:'j4',clientId:'e3',title:'クリーニングスタッフ（パート）',media:'baitoru',status:'closed',start:ago(60),end:ago(10),cost:50000,target:2,apps:7,hired:2,activeWorkers:0,kobot:'',note:'充足につき終了。',createdAt:ago(60)},
+    {id:'j5',clientId:'e4',title:'介護士（正社員）',media:'mynavi',status:'active',start:ago(10),end:fwd(20),cost:200000,target:2,apps:5,hired:0,activeWorkers:0,kobot:'K-2045',note:'コボット連携テスト中。',createdAt:ago(10)},
+    {id:'j6',clientId:'e2',title:'品質管理スタッフ',media:'hello',status:'closed',start:ago(45),end:ago(5),cost:0,target:1,apps:3,hired:1,activeWorkers:0,kobot:'',note:'ハロワ無料掲載。',createdAt:ago(45)},
+  ];
+  populateJobSelects();
+}
+
+function populateJobSelects(){
+  // Media selects
+  const mediaOpts = MEDIA_LIST.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+  ['jb-media','jf-media'].forEach(id=>{
+    const el = document.getElementById(id); if(!el) return;
+    el.innerHTML = (id==='jb-media'?'<option value="">全媒体</option>':'') + mediaOpts;
+  });
+  // Client select in job modal (existing clients only)
+  const exClients = clients.filter(c=>c.stage==='existing');
+  const jfCl = document.getElementById('jf-client');
+  if(jfCl) jfCl.innerHTML = '<option value="">選択してください</option>' + exClients.map(c=>`<option value="${c.id}">${c.company}</option>`).join('');
+  // Client filter in jobs list
+  const jbCl = document.getElementById('jb-client');
+  if(jbCl) jbCl.innerHTML = '<option value="">全顧客</option>' + exClients.map(c=>`<option value="${c.id}">${c.company}</option>`).join('');
+  // Rep filter in jobs list
+  const jbRep = document.getElementById('jb-rep');
+  if(jbRep) jbRep.innerHTML = '<option value="">全担当</option>' + REPS.map(r=>`<option value="${r.id}">${r.short}</option>`).join('');
+}
+
+function onJobClientChange(){}
+function resetJobFilters(){
+  document.getElementById('jb-q').value='';
+  document.getElementById('jb-media').value='';
+  document.getElementById('jb-status').value='';
+  document.getElementById('jb-client').value='';
+  document.getElementById('jb-rep').value='';
+  document.getElementById('jb-sort').value='';
+  renderJobs();
+}
+
+// ── RENDER JOBS ──
+function renderJobs(){
+  const q = document.getElementById('jb-q').value.toLowerCase();
+  const media = document.getElementById('jb-media').value;
+  const status = document.getElementById('jb-status').value;
+  const cid = document.getElementById('jb-client').value;
+  const rep = document.getElementById('jb-rep')?.value||'';
+  const sort = document.getElementById('jb-sort')?.value||'';
+
+  let list = jobs.filter(j=>{
+    const cl = clients.find(c=>c.id===j.clientId);
+    const mq = !q || j.title.toLowerCase().includes(q) || (cl?.company||'').toLowerCase().includes(q) || mediaName(j.media).toLowerCase().includes(q);
+    const repOk = !rep || cl?.assignee===rep;
+    return mq && (!media||j.media===media) && (!status||j.status===status) && (!cid||j.clientId===cid) && repOk;
+  });
+
+  // Sort
+  if(sort==='media') list=list.sort((a,b)=>a.media.localeCompare(b.media));
+  else if(sort==='cost_desc') list=list.sort((a,b)=>Number(b.cost||0)-Number(a.cost||0));
+  else if(sort==='hired_desc') list=list.sort((a,b)=>Number(b.hired||0)-Number(a.hired||0));
+  else if(sort==='cpa_asc') list=list.sort((a,b)=>{
+    const ca=a.hired>0?a.cost/a.hired:Infinity,cb=b.hired>0?b.cost/b.hired:Infinity;return ca-cb;
+  });
+
+  const tbody = document.getElementById('jb-tbody');
+  const empty = document.getElementById('jb-empty');
+
+  // Stats - use active jobs for cost/hired totals
+  const activeJobs = jobs.filter(j=>j.status==='active');
+  const mnCost = activeJobs.reduce((s,j)=>s+Number(j.cost||0),0);
+  const mnHired = activeJobs.reduce((s,j)=>s+Number(j.hired||0),0);
+  const mnWorkers = activeJobs.reduce((s,j)=>s+Number(j.activeWorkers||0),0);
+  const mnCpa = mnHired>0 ? Math.round(mnCost/mnHired) : null;
+  document.getElementById('sj-active').textContent = activeJobs.length;
+  document.getElementById('sj-cost').textContent = '¥'+mnCost.toLocaleString();
+  document.getElementById('sj-hired').textContent = mnHired;
+  document.getElementById('sj-workers').textContent = mnWorkers;
+  document.getElementById('sj-cph').textContent = mnCpa ? '¥'+mnCpa.toLocaleString() : '—';
+  document.getElementById('nb-jb').textContent = activeJobs.length;
+
+  if(!list.length){tbody.innerHTML='';empty.style.display='';return;}
+  empty.style.display='none';
+
+  const stMap = {active:'b-gr',closed:'b-gy',draft:'b-am'};
+  const stLabel = {active:'掲載中',closed:'掲載終了',draft:'下書き'};
+
+  tbody.innerHTML = list.map(j=>{
+    const cl = clients.find(c=>c.id===j.clientId);
+    const cph = j.hired>0 ? '¥'+(Math.round(j.cost/j.hired)).toLocaleString() : '—'; // CPA
+    const appRate = j.apps>0 ? Math.round(j.hired/j.apps*100)+'%' : '—';
+    return `<tr onclick="openJobDetail('${j.id}')">
+      <td><div style="font-weight:500;font-size:13px">${cl?.company||'—'}</div><div style="font-size:10px;color:var(--t2)">${cl?.industry||''}</div></td>
+      <td><div style="font-size:12px;font-weight:500;max-width:180px">${j.title}</div></td>
+      <td><span class="bdg" style="background:${mediaColor(j.media)}18;color:${mediaColor(j.media)};border:1px solid ${mediaColor(j.media)}44">${mediaName(j.media)}</span></td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--t2);white-space:nowrap">${j.start||'—'}<br>${j.end||'—'}</td>
+      <td style="font-family:var(--mono);font-size:12px;font-weight:500">${j.cost?'¥'+(Number(j.cost)).toLocaleString():'—'}</td>
+      <td style="text-align:center;font-family:var(--mono)">${j.apps||0}</td>
+      <td style="text-align:center;font-family:var(--mono);font-weight:600;color:${j.hired>0?'var(--green)':'var(--t3)'}">${j.hired||0}</td>
+      <td style="text-align:center;font-family:var(--mono);font-weight:600;color:${(j.activeWorkers||0)>0?'var(--purple)':'var(--t3)'}">${j.activeWorkers||0}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:${j.hired>0?'var(--purple)':'var(--t3)'}">${cph}</td>
+      <td><span class="bdg ${stMap[j.status]||'b-gy'}">${stLabel[j.status]||j.status}</span></td>
+      <td>${j.kobot?`<span class="bdg b-tl" title="コボットID: ${j.kobot}">🔗 ${j.kobot}</span>`:'<span style="color:var(--t3);font-size:10px">—</span>'}</td>
+      <td><div class="ra" onclick="event.stopPropagation()">
+        <button class="btn bg_ bxs" onclick="openJobModal(jobs.find(x=>x.id==='${j.id}'))">編集</button>
+        <button class="btn bd bxs" onclick="deleteJob('${j.id}')">削除</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── JOB DASHBOARD ──
+function getFilteredJobs(){
+  const period=document.getElementById('jd-period')?.value||'all';
+  if(period==='all') return jobs;
+  const now=new Date();
+  const ym=d=>d.toISOString().slice(0,7);
+  if(period==='thismonth'){const m=ym(now);return jobs.filter(j=>j.start?.startsWith(m)||j.end?.startsWith(m));}
+  if(period==='lastmonth'){const d=new Date(now.getFullYear(),now.getMonth()-1,1);const m=ym(d);return jobs.filter(j=>j.start?.startsWith(m)||j.end?.startsWith(m));}
+  const mo=period==='3m'?2:5;
+  const cutoff=new Date(now.getFullYear(),now.getMonth()-mo,1).toISOString().slice(0,10);
+  return jobs.filter(j=>(j.start||'')>=cutoff||(j.end||'')>=cutoff);
+}
+
+function renderJobDash(){
+  const fj=getFilteredJobs();
+  const period=document.getElementById('jd-period')?.value||'all';
+  const pLabel={all:'全期間',thismonth:'今月',lastmonth:'先月','3m':'直近3ヶ月','6m':'直近6ヶ月'};
+  const totalCost=fj.reduce((s,j)=>s+Number(j.cost||0),0);
+  const totalHired=fj.reduce((s,j)=>s+Number(j.hired||0),0);
+  const totalApps=fj.reduce((s,j)=>s+Number(j.apps||0),0);
+  const avgCph=totalHired>0?Math.round(totalCost/totalHired):null;
+  const hireRate=totalApps>0?Math.round(totalHired/totalApps*100):null;
+  document.getElementById('jd-total-cost').textContent='\u00a5'+totalCost.toLocaleString();
+  document.getElementById('jd-total-hired').textContent=totalHired;
+  document.getElementById('jd-total-apps').textContent=totalApps;
+  document.getElementById('jd-avg-cph').textContent=avgCph?'\u00a5'+avgCph.toLocaleString():'\u2014';
+  document.getElementById('jd-hire-rate').textContent=hireRate?hireRate+'%':'\u2014';
+  document.getElementById('jd-cost-period').textContent=pLabel[period]||'';
+
+  const mediaStats=MEDIA_LIST.map(m=>{
+    const mj=fj.filter(j=>j.media===m.id);
+    const cost=mj.reduce((s,j)=>s+Number(j.cost||0),0);
+    const hired=mj.reduce((s,j)=>s+Number(j.hired||0),0);
+    const apps=mj.reduce((s,j)=>s+Number(j.apps||0),0);
+    const cph=hired>0?Math.round(cost/hired):null;
+    return {m,cost,hired,apps,cph,count:mj.length};
+  }).filter(x=>x.count>0).sort((a,b)=>{
+    if(a.cph&&b.cph) return a.cph-b.cph;
+    if(a.cph) return -1; if(b.cph) return 1;
+    return b.cost-a.cost;
+  });
+  const medals=['\ud83e\udfc7','\ud83e\udfc8','\ud83e\udfc9'];
+  document.getElementById('jd-media-roi').innerHTML=mediaStats.length?mediaStats.map((x,i)=>
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">'
+    +'<div style="display:flex;align-items:center;gap:8px">'
+    +'<span style="font-size:'+(i<3?14:11)+'px;min-width:22px">'+(i<3?medals[i]:(i+1)+'\u4f4d')+'</span>'
+    +'<div><span class="bdg" style="background:'+x.m.color+'18;color:'+x.m.color+';border:1px solid '+x.m.color+'44">'+x.m.name+'</span>'
+    +'<div style="font-size:10px;color:var(--t2);margin-top:2px">'+x.count+'\u4ef6 \u639b\u8f09</div></div></div>'
+    +'<div style="text-align:right">'
+    +'<div style="font-family:var(--mono);font-size:13px;font-weight:700;color:'+(x.cph?'var(--purple)':'var(--t3)')+'">'+( x.cph?'CPA \u00a5'+x.cph.toLocaleString():'\u63a1\u7528\u306a\u3057')+'</div>'
+    +'<div style="font-size:10px;color:var(--t2);margin-top:1px">'+x.apps+'\u5fdc\u52df \u2192 <span style="color:var(--green);font-weight:600">'+x.hired+'\u63a1\u7528</span>'+(x.cost>0?' / \u00a5'+(x.cost/10000).toFixed(1)+'\u4e07':'')+'</div>'
+    +'</div></div>'
+  ).join(''):'<div style="color:var(--t3);font-size:12px;text-align:center;padding:24px">\u30c7\u30fc\u30bf\u306a\u3057</div>';
+
+  // SVG horizontal bar chart for media cost
+  const mediaSvgEl=document.getElementById('jd-media-cost-svg');
+  if(mediaSvgEl){
+    if(mediaStats.length){
+      mediaSvgEl.innerHTML=svgHBarChart({
+        labels:mediaStats.map(x=>x.m.name),
+        values:mediaStats.map(x=>x.cost),
+        colors:mediaStats.map(x=>x.m.color),
+        width:320
+      });
+    } else {
+      mediaSvgEl.innerHTML='<div style="color:var(--t3);font-size:12px;text-align:center;padding:16px">データなし</div>';
+    }
+  }
+  // Donut chart for media cost share
+  const donutEl=document.getElementById('jd-media-donut');
+  const legendEl=document.getElementById('jd-media-donut-legend');
+  if(donutEl&&mediaStats.length){
+    donutEl.innerHTML=svgDonut({
+      values:mediaStats.map(x=>x.cost),
+      colors:mediaStats.map(x=>x.m.color),
+      labels:mediaStats.map(x=>x.m.name),
+      size:90
+    });
+    legendEl.innerHTML=mediaStats.map(x=>`
+      <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px">
+        <div style="width:8px;height:8px;border-radius:2px;background:${x.m.color};flex-shrink:0"></div>
+        <span>${x.m.name} <span style="font-family:var(--mono);color:var(--t2)">${Math.round(x.cost/totalCost*100)}%</span></span>
+      </div>`).join('');
+  } else if(donutEl){donutEl.innerHTML='';}
+
+  const months=lastMonths(6);
+  const mCosts=months.map(m=>jobs.filter(j=>j.start&&j.start.startsWith(m)).reduce((s,j)=>s+Number(j.cost||0),0));
+  const mHired=months.map(m=>jobs.filter(j=>j.start&&j.start.startsWith(m)).reduce((s,j)=>s+Number(j.hired||0),0));
+  const nowM=new Date().toISOString().slice(0,7);
+  const trendColors=months.map(m=>m===nowM?'var(--accent)':'var(--border2)');
+  document.getElementById('jd-cost-trend').innerHTML=svgBarChart({
+    labels:months.map(m=>m.slice(5)+'月'),
+    values:mCosts,
+    colors:trendColors,
+    lineValues:mHired.some(v=>v>0)?mHired:null,
+    width:280,
+    height:110,
+    unit:'¥'
+  });
+
+  const actJ=jobs.filter(j=>j.status==='active');
+  document.getElementById('jd-active-summary').innerHTML=
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
+    +'<div class="kpi-mini"><div class="val" style="font-size:16px;color:var(--accent)">'+actJ.length+'</div><div class="lbl">\u639b\u8f09\u4e2d</div></div>'
+    +'<div class="kpi-mini"><div class="val" style="font-size:13px;color:var(--amber)">\u00a5'+(actJ.reduce((s,j)=>s+Number(j.cost||0),0)/10000).toFixed(0)+'\u4e07</div><div class="lbl">\u8cbb\u7528\u8a08</div></div>'
+    +'</div>';
+
+  const exCl=clients.filter(c=>c.stage==='existing');
+  const clStats=exCl.map(c=>{
+    const cj=fj.filter(j=>j.clientId===c.id);
+    const cost=cj.reduce((s,j)=>s+Number(j.cost||0),0);
+    const hired=cj.reduce((s,j)=>s+Number(j.hired||0),0);
+    const apps=cj.reduce((s,j)=>s+Number(j.apps||0),0);
+    const active=jobs.filter(j=>j.clientId===c.id&&j.status==='active').length;
+    const cph=hired>0?Math.round(cost/hired):null;
+    return {c,count:cj.length,cost,hired,apps,active,cph};
+  }).filter(x=>x.count>0).sort((a,b)=>b.cost-a.cost);
+  document.getElementById('jd-client-table').innerHTML=clStats.length
+    ?'<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:var(--s2)">'
+      +'<th style="padding:7px 8px;text-align:left;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border)">\u9867\u5ba2</th>'
+      +'<th style="padding:7px 8px;text-align:center;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border)">\u6c42\u4eba</th>'
+      +'<th style="padding:7px 8px;text-align:center;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border)">\u639b\u8f09\u4e2d</th>'
+      +'<th style="padding:7px 8px;text-align:right;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border)">\u5fdc\u52df</th>'
+      +'<th style="padding:7px 8px;text-align:right;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border)">\u63a1\u7528</th>'
+      +'<th style="padding:7px 8px;text-align:right;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border)">\u8cbb\u7528</th>'
+      +'<th style="padding:7px 8px;text-align:right;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border)">CPA</th>'
+      +'</tr></thead><tbody>'
+      +clStats.map(x=>
+        '<tr style="border-bottom:1px solid var(--border)">'
+        +'<td style="padding:7px 8px"><div style="font-weight:500;font-size:12px">'+x.c.company+'</div>'
+        +'<div style="font-size:10px;color:var(--t2)">'+(x.c.industry||'')+'</div></td>'
+        +'<td style="padding:7px 8px;text-align:center;font-family:var(--mono)">'+x.count+'</td>'
+        +'<td style="padding:7px 8px;text-align:center">'+(x.active>0?'<span class="bdg b-gr">'+x.active+'</span>':'<span style="color:var(--t3);font-size:10px">\u2014</span>')+'</td>'
+        +'<td style="padding:7px 8px;text-align:right;font-family:var(--mono)">'+x.apps+'</td>'
+        +'<td style="padding:7px 8px;text-align:right;font-family:var(--mono);color:var(--green);font-weight:600">'+x.hired+'</td>'
+        +'<td style="padding:7px 8px;text-align:right;font-family:var(--mono);font-size:11px">\u00a5'+(x.cost/10000).toFixed(1)+'\u4e07</td>'
+        +'<td style="padding:7px 8px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--purple)">CPA '+(x.cph?'\u00a5'+x.cph.toLocaleString():'\u2014')+'</td>'
+        +'</tr>'
+      ).join('')+'</tbody></table>'
+    :'<div style="color:var(--t3);font-size:12px;text-align:center;padding:20px">\u30c7\u30fc\u30bf\u306a\u3057</div>';
+
+  const roleMap={};
+  fj.forEach(j=>{
+    const key=j.title.replace(/[\uff08(].*$/,'').trim().slice(0,12);
+    if(!roleMap[key]) roleMap[key]={apps:0,hired:0};
+    roleMap[key].apps+=Number(j.apps||0);
+    roleMap[key].hired+=Number(j.hired||0);
+  });
+  const roles=Object.entries(roleMap).sort((a,b)=>b[1].hired-a[1].hired||b[1].apps-a[1].apps).slice(0,6);
+  const maxRA=Math.max(...roles.map(x=>x[1].apps),1);
+  document.getElementById('jd-role-bars').innerHTML=roles.length?roles.map(([role,stat])=>
+    '<div class="bar-row" style="margin-bottom:8px">'
+    +'<div class="bar-label" style="font-size:10px;width:90px">'+role+'</div>'
+    +'<div class="bar-wrap"><div class="bar-fill" style="width:'+Math.round(stat.apps/maxRA*100)+'%;background:var(--teal)">'
+    +(stat.apps>0?'<span class="bar-text">'+stat.apps+'\u5fdc\u52df</span>':'')
+    +'</div></div>'
+    +'<div style="font-size:10px;font-family:var(--mono);color:var(--green);font-weight:600;width:28px;text-align:right">'+stat.hired+'\u63a1</div>'
+    +'</div>'
+  ).join(''):'<div style="color:var(--t3);font-size:11px;text-align:center;padding:16px">\u30c7\u30fc\u30bf\u306a\u3057</div>';
+
+  const stC={active:0,closed:0,draft:0};
+  jobs.forEach(j=>{if(stC[j.status]!==undefined) stC[j.status]++;});
+  document.getElementById('jd-status-summary').innerHTML=
+    '<div style="display:flex;gap:7px">'
+    +'<div class="kpi-mini" style="flex:1;background:var(--gl)"><div class="val" style="font-size:16px;color:var(--green)">'+stC.active+'</div><div class="lbl">\u639b\u8f09\u4e2d</div></div>'
+    +'<div class="kpi-mini" style="flex:1"><div class="val" style="font-size:16px;color:var(--gray)">'+stC.closed+'</div><div class="lbl">\u7d42\u4e86</div></div>'
+    +'<div class="kpi-mini" style="flex:1;background:var(--al)"><div class="val" style="font-size:16px;color:var(--amber)">'+stC.draft+'</div><div class="lbl">\u4e0b\u66f8\u304d</div></div>'
+    +'</div>';
+}
+
+// ============================================================
+// SVG CHART HELPERS
+// ============================================================
+function svgBarChart({labels, values, colors, lineValues, width=360, height=120, unit='¥'}){
+  const pad={t:16,r:8,b:28,l:48};
+  const w=width-pad.l-pad.r, h=height-pad.t-pad.b;
+  const n=labels.length;
+  const bw=Math.floor(w/n*0.6);
+  const gap=(w-bw*n)/(n+1);
+  const maxV=Math.max(...values,1);
+  const maxL=lineValues?Math.max(...lineValues,1):1;
+
+  // Y axis ticks (3 ticks)
+  const ticks=[0,Math.round(maxV/2),maxV];
+  const yScale=v=>h-Math.round(v/maxV*h);
+
+  let s=`<svg width="100%" viewBox="0 0 ${width} ${height}" style="overflow:visible;display:block">`;
+  // Grid lines
+  ticks.forEach(t=>{
+    const y=pad.t+yScale(t);
+    s+=`<line x1="${pad.l}" y1="${y}" x2="${pad.l+w}" y2="${y}" stroke="var(--border)" stroke-width="1"/>`;
+    const label=t>0?(unit==='¥'?`¥${(t/10000).toFixed(0)}万`:`${t}`):0;
+    s+=`<text x="${pad.l-4}" y="${y+3}" text-anchor="end" font-size="8" fill="var(--t3)" font-family="monospace">${label}</text>`;
+  });
+
+  // Bars
+  values.forEach((v,i)=>{
+    const x=pad.l+gap+i*(bw+gap);
+    const bh=Math.max(Math.round(v/maxV*h),v>0?2:0);
+    const y=pad.t+h-bh;
+    const color=Array.isArray(colors)?colors[i]:(colors||'var(--accent)');
+    s+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="3" fill="${color}" opacity=".85">`;
+    s+=`<title>${labels[i]}: ${unit==='¥'?'¥'+Number(v).toLocaleString():v}</title></rect>`;
+    if(v>0){
+      const vLabel=unit==='¥'?`¥${(v/10000).toFixed(0)}万`:`${v}`;
+      s+=`<text x="${x+bw/2}" y="${y-3}" text-anchor="middle" font-size="8" fill="var(--t2)" font-family="monospace">${vLabel}</text>`;
+    }
+    s+=`<text x="${x+bw/2}" y="${pad.t+h+11}" text-anchor="middle" font-size="8" fill="var(--t3)" font-family="monospace">${labels[i]}</text>`;
+  });
+
+  // Line (secondary axis)
+  if(lineValues&&lineValues.some(v=>v>0)){
+    const points=lineValues.map((v,i)=>{
+      const x=pad.l+gap+i*(bw+gap)+bw/2;
+      const y=pad.t+h-Math.round(v/maxL*h);
+      return `${x},${y}`;
+    }).join(' ');
+    s+=`<polyline points="${points}" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linejoin="round"/>`;
+    lineValues.forEach((v,i)=>{
+      const x=pad.l+gap+i*(bw+gap)+bw/2;
+      const y=pad.t+h-Math.round(v/maxL*h);
+      s+=`<circle cx="${x}" cy="${y}" r="3" fill="var(--green)"><title>${labels[i]} 採用: ${v}名</title></circle>`;
+    });
+  }
+
+  s+=`<line x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${pad.t+h}" stroke="var(--border2)" stroke-width="1"/>`;
+  s+=`<line x1="${pad.l}" y1="${pad.t+h}" x2="${pad.l+w}" y2="${pad.t+h}" stroke="var(--border2)" stroke-width="1"/>`;
+  s+='</svg>';
+  return s;
+}
+
+function svgHBarChart({labels, values, colors, width=320, height}){
+  const rowH=28, pad={t:4,r:60,b:4,l:90};
+  const rows=labels.length;
+  const h=(height||(rows*rowH+pad.t+pad.b));
+  const w=width-pad.l-pad.r;
+  const maxV=Math.max(...values,1);
+  let s=`<svg width="100%" viewBox="0 0 ${width} ${h}" style="display:block">`;
+  labels.forEach((lbl,i)=>{
+    const y=pad.t+i*rowH;
+    const bw=Math.max(Math.round(values[i]/maxV*w),values[i]>0?4:0);
+    const color=Array.isArray(colors)?colors[i]:(colors||'var(--accent)');
+    s+=`<text x="${pad.l-6}" y="${y+rowH/2+4}" text-anchor="end" font-size="10" fill="var(--text)" font-family="sans-serif">${lbl}</text>`;
+    s+=`<rect x="${pad.l}" y="${y+4}" width="${w}" height="${rowH-8}" rx="3" fill="var(--s3)"/>`;
+    s+=`<rect x="${pad.l}" y="${y+4}" width="${bw}" height="${rowH-8}" rx="3" fill="${color}" opacity=".85">`;
+    s+=`<title>${lbl}: ¥${Number(values[i]).toLocaleString()}</title></rect>`;
+    if(values[i]>0){
+      s+=`<text x="${pad.l+bw+4}" y="${y+rowH/2+4}" font-size="10" fill="var(--t2)" font-family="monospace">¥${(values[i]/10000).toFixed(1)}万</text>`;
+    }
+  });
+  s+='</svg>';
+  return s;
+}
+
+function svgDonut({values, colors, labels, size=120}){
+  const total=values.reduce((a,b)=>a+b,0);
+  if(!total) return '<div style="color:var(--t3);font-size:11px;text-align:center;padding:16px">データなし</div>';
+  const cx=size/2, cy=size/2, r=size*0.38, ri=size*0.23;
+  let s=`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">`;
+  let angle=-Math.PI/2;
+  values.forEach((v,i)=>{
+    if(!v) return;
+    const sweep=v/total*Math.PI*2;
+    const x1=cx+r*Math.cos(angle), y1=cy+r*Math.sin(angle);
+    const x2=cx+r*Math.cos(angle+sweep), y2=cy+r*Math.sin(angle+sweep);
+    const xi1=cx+ri*Math.cos(angle), yi1=cy+ri*Math.sin(angle);
+    const xi2=cx+ri*Math.cos(angle+sweep), yi2=cy+ri*Math.sin(angle+sweep);
+    const lg=sweep>Math.PI?1:0;
+    s+=`<path d="M${xi1} ${yi1} L${x1} ${y1} A${r} ${r} 0 ${lg} 1 ${x2} ${y2} L${xi2} ${yi2} A${ri} ${ri} 0 ${lg} 0 ${xi1} ${yi1}" fill="${colors[i]}" opacity=".88"><title>${labels[i]}: ${Math.round(v/total*100)}%</title></path>`;
+    angle+=sweep;
+  });
+  s+='</svg>';
+  return s;
+}
+
+// ── MONTHLY INPUT ──
+function openMonthlyInput(){
+  const sel=document.getElementById('mn-month');
+  const months=lastMonths(6).reverse();
+  sel.innerHTML=months.map((m,i)=>'<option value="'+m+'"'+(i===0?' selected':'')+'>'+m.slice(0,4)+'\u5e74'+m.slice(5)+'\u6708</option>').join('');
+  renderMonthlyRows();
+  sel.onchange=renderMonthlyRows;
+  document.getElementById('monthly-modal').classList.add('open');
+}
+function closeMonthlyInput(){document.getElementById('monthly-modal').classList.remove('open');}
+
+function renderMonthlyRows(){
+  const targetJobs=jobs.filter(j=>j.status!=='draft');
+  const rows=document.getElementById('mn-rows');
+  if(!targetJobs.length){
+    rows.innerHTML='<div style="padding:24px;text-align:center;color:var(--t3)">\u6c42\u4eba\u304c\u767b\u9332\u3055\u308c\u3066\u3044\u307e\u305b\u3093</div>';
+    return;
+  }
+  let html='<table style="width:100%;border-collapse:collapse">'
+    +'<thead><tr style="background:var(--s2);position:sticky;top:0;z-index:1">'
+    +'<th style="padding:8px 14px;text-align:left;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border)">\u9867\u5ba2 / \u8077\u7a2e</th>'
+    +'<th style="padding:8px 10px;text-align:center;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border)">\u5a92\u4f53</th>'
+    +'<th style="padding:8px 10px;text-align:center;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border);width:90px">\u5fdc\u52df\u6570<br><span style=\"font-weight:400;opacity:.7\">\u7d2f\u8a08</span></th>'
+    +'<th style="padding:8px 10px;text-align:center;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border);width:90px">\u63a1\u7528\u6570<br><span style=\"font-weight:400;opacity:.7\">\u7d2f\u8a08</span></th>'
+    +'<th style="padding:8px 10px;text-align:center;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border);width:80px">\u30b9\u30c6\u30fc\u30bf\u30b9</th>'
+    +'</tr></thead><tbody>';
+  targetJobs.forEach(j=>{
+    const cl=clients.find(c=>c.id===j.clientId);
+    html+='<tr style="border-bottom:1px solid var(--border)">'
+      +'<td style="padding:10px 14px"><div style="font-weight:500;font-size:12px">'+(cl?.company||'\u2014')+'</div>'
+      +'<div style="font-size:10px;color:var(--t2);margin-top:2px">'+j.title+'</div></td>'
+      +'<td style="padding:10px;text-align:center"><span class="bdg" style="background:'+mediaColor(j.media)+'18;color:'+mediaColor(j.media)+';border:1px solid '+mediaColor(j.media)+'44;font-size:9px">'+mediaName(j.media)+'</span></td>'
+      +'<td style="padding:8px 10px;text-align:center"><input type="number" min="0" value="'+(j.apps||0)+'" data-jid="'+j.id+'" data-field="apps"'
+      +' style="width:70px;padding:5px 7px;border:1px solid var(--border);border-radius:6px;text-align:center;font-family:var(--mono);font-size:12px;background:var(--surface)" onfocus="this.select()"></td>'
+      +'<td style="padding:8px 10px;text-align:center"><input type="number" min="0" value="'+(j.hired||0)+'" data-jid="'+j.id+'" data-field="hired"'
+      +' style="width:70px;padding:5px 7px;border:1px solid var(--border);border-radius:6px;text-align:center;font-family:var(--mono);font-size:12px;background:var(--surface);color:var(--green)" onfocus="this.select()"></td>'
+      +'<td style="padding:8px 10px;text-align:center"><select data-jid="'+j.id+'" data-field="status"'
+      +' style="padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:11px;background:var(--surface)">'
+      +'<option value="active"'+(j.status==='active'?' selected':'')+'>\u639b\u8f09\u4e2d</option>'
+      +'<option value="closed"'+(j.status==='closed'?' selected':'')+'>\u7d42\u4e86</option>'
+      +'<option value="draft"'+(j.status==='draft'?' selected':'')+'>\u4e0b\u66f8\u304d</option>'
+      +'</select></td></tr>';
+  });
+  html+='</tbody></table>';
+  rows.innerHTML=html;
+}
+
+function saveMonthlyInput(){
+  document.querySelectorAll('#mn-rows input[data-jid],#mn-rows select[data-jid]').forEach(inp=>{
+    const j=jobs.find(x=>x.id===inp.dataset.jid);
+    if(!j) return;
+    const field=inp.dataset.field;
+    if(field==='apps'||field==='hired') j[field]=Number(inp.value)||0;
+    else j[field]=inp.value;
+  });
+  closeMonthlyInput();
+  if(currentPage==='jobs') renderJobs();
+  if(currentPage==='jobdash') renderJobDash();
+  alert('\u2705 \u5b9f\u7e3e\u3092\u4fdd\u5b58\u3057\u307e\u3057\u305f');
+}
+
+// ── JOB DETAIL (inline expand TBD - opens edit modal) ──
+function openJobDetail(jid){
+  const j = jobs.find(x=>x.id===jid);
+  if(j) openJobModal(j);
+}
+
+// ── JOB MODAL ──
+function openJobModal(j=null){
+  editingJobId = j?.id || null;
+  document.getElementById('job-modal-title').textContent = j ? '求人を編集' : '求人を追加';
+  populateJobSelects();
+  document.getElementById('jf-client').value = j?.clientId || '';
+  document.getElementById('jf-title').value = j?.title || '';
+  document.getElementById('jf-media').value = j?.media || 'indeed';
+  document.getElementById('jf-status').value = j?.status || 'active';
+  document.getElementById('jf-start').value = j?.start || new Date().toISOString().slice(0,10);
+  document.getElementById('jf-end').value = j?.end || '';
+  document.getElementById('jf-cost').value = j?.cost || '';
+  document.getElementById('jf-target').value = j?.target || 1;
+  document.getElementById('jf-apps').value = j?.apps || 0;
+  document.getElementById('jf-hired').value = j?.hired || 0;
+  document.getElementById('jf-workers').value = j?.activeWorkers || 0;
+  document.getElementById('jf-kobot').value = j?.kobot || '';
+  document.getElementById('jf-note').value = j?.note || '';
+  document.getElementById('job-modal').classList.add('open');
+}
+function closeJobModal(){ document.getElementById('job-modal').classList.remove('open'); editingJobId=null; }
+
+async function saveJob(){
+  const cid = document.getElementById('jf-client').value;
+  const title = document.getElementById('jf-title').value.trim();
+  if(!cid || !title){ alert('顧客と職種は必須です'); return; }
+  const data = {
+    clientId:cid, title, media:document.getElementById('jf-media').value,
+    status:document.getElementById('jf-status').value,
+    start:document.getElementById('jf-start').value, end:document.getElementById('jf-end').value,
+    cost:Number(document.getElementById('jf-cost').value)||0,
+    target:Number(document.getElementById('jf-target').value)||1,
+    apps:Number(document.getElementById('jf-apps').value)||0,
+    hired:Number(document.getElementById('jf-hired').value)||0,
+    activeWorkers:Number(document.getElementById('jf-workers').value)||0,
+    kobot:document.getElementById('jf-kobot').value.trim(),
+    note:document.getElementById('jf-note').value.trim(),
+  };
+  if(editingJobId){ const idx=jobs.findIndex(x=>x.id===editingJobId); jobs[idx]={...jobs[idx],...data}; }
+  else { data.id='j'+Date.now(); data.createdAt=new Date().toISOString().slice(0,10); jobs.push(data); }
+  closeJobModal();
+  if(currentPage==='jobs') renderJobs();
+  else if(currentPage==='jobdash') renderJobDash();
+  document.getElementById('nb-jb').textContent = jobs.filter(j=>j.status==='active').length;
+}
+
+function deleteJob(jid){
+  if(!confirm('この求人を削除しますか？')) return;
+  jobs = jobs.filter(j=>j.id!==jid);
+  renderJobs();
+  document.getElementById('nb-jb').textContent = jobs.filter(j=>j.status==='active').length;
+}
+
+// showPage is fully defined above — no overrides needed
+
+// ============================================================
+// SUPABASE LAYER
+// ============================================================
+let sb = null;  // Supabase client
+let isLive = false;
+let realtimeSub = null;
+
+const SB_URL_KEY = 'hirecrm_sb_url';
+const SB_KEY_KEY = 'hirecrm_sb_key';
+
+function initSupabase(url, key) {
+  try {
+    sb = supabase.createClient(url, key);
+    return true;
+  } catch(e) {
+    console.error('Supabase init error:', e);
+    return false;
+  }
+}
+
+// ── DB SETUP UI ──
+function openDBSetup() {
+  const url = localStorage.getItem(SB_URL_KEY) || '';
+  const key = localStorage.getItem(SB_KEY_KEY) || '';
+  document.getElementById('sb-url').value = url;
+  document.getElementById('sb-key').value = key;
+  setDBStatus('', '');
+  document.getElementById('db-setup').style.display = 'flex';
+}
+function closeDBSetup() { document.getElementById('db-setup').style.display = 'none'; }
+
+function setDBStatus(msg, state) {
+  const el = document.getElementById('db-status-msg');
+  el.textContent = msg;
+  el.className = 'db-status' + (state ? ' ' + state : '');
+}
+
+async function testConnection() {
+  const url = document.getElementById('sb-url').value.trim();
+  const key = document.getElementById('sb-key').value.trim();
+  if (!url || !key) { setDBStatus('URL と Key を入力してください', 'err'); return; }
+  setDBStatus('⏳ 接続中...', 'chk');
+  if (!initSupabase(url, key)) { setDBStatus('❌ クライアント初期化エラー', 'err'); return; }
+  try {
+    const { error } = await sb.from('clients').select('id').limit(1);
+    if (error) throw error;
+    setDBStatus('✅ 接続成功！テーブルも確認できました', 'ok');
+  } catch(e) {
+    setDBStatus('❌ ' + (e.message || 'テーブルが見つかりません。SQLを実行しましたか？'), 'err');
+  }
+}
+
+async function saveAndConnect() {
+  const url = document.getElementById('sb-url').value.trim();
+  const key = document.getElementById('sb-key').value.trim();
+  if (!url || !key) { setDBStatus('URL と Key を入力してください', 'err'); return; }
+  setDBStatus('⏳ 接続中...', 'chk');
+  if (!initSupabase(url, key)) { setDBStatus('❌ 初期化エラー', 'err'); return; }
+  try {
+    const { error } = await sb.from('clients').select('id').limit(1);
+    if (error) throw error;
+    localStorage.setItem(SB_URL_KEY, url);
+    localStorage.setItem(SB_KEY_KEY, key);
+    isLive = true;
+    setSyncPill('live');
+    await loadFromDB();
+    subscribeRealtime();
+    closeDBSetup();
+  } catch(e) {
+    setDBStatus('❌ ' + (e.message || 'テーブルが見つかりません'), 'err');
+  }
+}
+
+function setSyncPill(state) {
+  const pill = document.getElementById('sync-pill');
+  const label = document.getElementById('sync-label');
+  pill.className = 'sync-pill sync-' + state;
+  if (state === 'live') label.textContent = 'リアルタイム同期中';
+  else if (state === 'local') label.textContent = 'ローカルモード';
+  else label.textContent = '接続エラー';
+}
+
+// ── LOAD FROM DB ──
+async function loadFromDB() {
+  try {
+    const [cr, ar] = await Promise.all([
+      sb.from('clients').select('*').order('created_at'),
+      sb.from('actions').select('*').order('date')
+    ]);
+    if (cr.error) throw cr.error;
+    if (ar.error) throw ar.error;
+    clients = cr.data.map(dbToClient);
+    actions = ar.data.map(dbToAction);
+    populateSelects();
+    buildRepTabs();
+    updateAll();
+  } catch(e) {
+    console.error('loadFromDB error:', e);
+    setSyncPill('err');
+  }
+}
+
+// ── DB ↔ LOCAL MAPPING ──
+function dbToClient(r) {
+  return { id:r.id, stage:migrateStage(r.stage), contactStatus:r.contact_status||'',
+    existingStatus:r.existing_status||'', rank:r.rank||'', potential:r.potential||'',
+    company:r.company, industry:r.industry||'', scale:r.scale||'',
+    branches:r.branches||'', contact:r.contact||'', ctitle:r.ctitle||'', phone:r.phone||'',
+    email:r.email||'', area:r.area||'', addr:r.addr||'', web:r.web||'', assignee:r.assignee||'',
+    memo:r.memo||'', createdAt:r.created_at||'' };
+}
+function dbToAction(r) {
+  return { id:r.id, clientId:r.client_id, type:r.type, note:r.note||'', rep:r.rep||'', date:r.date||'' };
+}
+function clientToDB(c) {
+  return { id:c.id, stage:c.stage, contact_status:c.contactStatus||'',
+    existing_status:c.existingStatus||'', rank:c.rank||'', potential:c.potential||'',
+    company:c.company, industry:c.industry||'', scale:c.scale||'',
+    branches:c.branches||'', contact:c.contact||'', ctitle:c.ctitle||'', phone:c.phone||'',
+    email:c.email||'', area:c.area||'', addr:c.addr||'', web:c.web||'', assignee:c.assignee||'',
+    memo:c.memo||'', created_at:c.createdAt||'' };
+}
+function actionToDB(a) {
+  return { id:a.id, client_id:a.clientId, type:a.type, note:a.note, rep:a.rep, date:a.date };
+}
+
+// ── REALTIME ──
+function subscribeRealtime() {
+  if (realtimeSub) sb.removeChannel(realtimeSub);
+  realtimeSub = sb.channel('crm-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'clients' }, () => loadFromDB())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'actions' }, () => loadFromDB())
+    .subscribe();
+}
+
+// ── SAVE CLIENT TO DB ──
+async function saveClientToDB(c) {
+  if (!isLive) return;
+  try {
+    const { error } = await sb.from('clients').upsert(clientToDB(c));
+    if (error) throw error;
+  } catch(e) { console.error('saveClientToDB:', e); }
+}
+async function deleteClientFromDB(id) {
+  if (!isLive) return;
+  try {
+    await sb.from('clients').delete().eq('id', id);
+  } catch(e) { console.error('deleteClientFromDB:', e); }
+}
+async function saveActionToDB(a) {
+  if (!isLive) return;
+  try {
+    const { error } = await sb.from('actions').upsert(actionToDB(a));
+    if (error) throw error;
+  } catch(e) { console.error('saveActionToDB:', e); }
+}
+
+// ── SQL COPY ──
+function copySQL() {
+  const sql = `-- クライアントテーブル
+create table if not exists clients (
+  id text primary key,
+  stage text not null default 'new',
+  contact_status text,
+  existing_status text,
+  rank text, potential text,
+  company text not null,
+  industry text, scale text, branches text,
+  contact text, ctitle text, phone text,
+  email text, area text, addr text, web text,
+  assignee text, memo text,
+  created_at text
+);
+
+-- アクションテーブル
+create table if not exists actions (
+  id text primary key,
+  client_id text references clients(id) on delete cascade,
+  type text, note text, rep text, date text
+);
+
+-- リアルタイム有効化
+alter publication supabase_realtime add table clients;
+alter publication supabase_realtime add table actions;`;
+  navigator.clipboard.writeText(sql).then(() => {
+    const btn = event.target;
+    btn.textContent = '✅ コピーしました';
+    setTimeout(() => btn.textContent = '📋 SQLをコピー', 2000);
+  });
+}
+
+// ── AUTO INIT ON LOAD ──
+async function autoConnect() {
+  const url = localStorage.getItem(SB_URL_KEY);
+  const key = localStorage.getItem(SB_KEY_KEY);
+  if (url && key && initSupabase(url, key)) {
+    try {
+      const { error } = await sb.from('clients').select('id').limit(1);
+      if (!error) {
+        isLive = true;
+        setSyncPill('live');
+        await loadFromDB();
+        subscribeRealtime();
+        return;
+      }
+    } catch(e) { /* fall through to local */ }
+  }
+  // Local mode
+  initData();
+  initJobs();
+  initKpi();
+}
+
+// ============================================================
+// PATCH: saveClient / saveMini / deleteClient to also write to DB
+// ============================================================
+const _origSaveClient = saveClient;
+saveClient = async function() {
+  const wasEditing = editingId;
+  _origSaveClient();
+  // After local save, sync to DB if live
+  if(!isLive) return;
+  const c = wasEditing ? clients.find(x=>x.id===wasEditing) : clients[clients.length-1];
+  if(c) await saveClientToDB(c);
+};
+
+const _origSaveMini = saveMini;
+saveMini = async function() {
+  _origSaveMini();
+  if(!isLive) return;
+  const a = actions[actions.length-1];
+  if(a) await saveActionToDB(a);
+};
+
+const _origDeleteClient = deleteClient;
+deleteClient = async function(id) {
+  if (!confirm('この顧客を削除しますか？')) return;
+  await deleteClientFromDB(id);
+  clients = clients.filter(c => c.id !== id);
+  actions = actions.filter(a => a.clientId !== id);
+  closeDetail(); updateAll();
+};
+
+// ── START ──
+autoConnect();
+
+// ============================================================
+// KPI / 目標管理 MODULE
+// ============================================================
+
+let kpiTargets = []; // {month, repId, newContact, proposal, win}
+let budgetTargets = []; // {month, budget}
+let kpiSelectedMonth = new Date().toISOString().slice(0,7);
+
+function initKpi() {
+  // Seed sample targets for current + previous month
+  const m0 = new Date().toISOString().slice(0,7);
+  const d1 = new Date(); d1.setMonth(d1.getMonth()-1);
+  const m1 = d1.toISOString().slice(0,7);
+  REPS.forEach(r => {
+    kpiTargets.push({month:m0, repId:r.id, newContact:8, proposal:4, win:1});
+    kpiTargets.push({month:m1, repId:r.id, newContact:7, proposal:3, win:1});
+  });
+  budgetTargets.push({month:m0, budget:600000});
+  budgetTargets.push({month:m1, budget:500000});
+}
+
+function getKpiMonths() {
+  const months = [];
+  for(let i=5;i>=0;i--) {
+    const d = new Date(); d.setMonth(d.getMonth()-i);
+    months.push(d.toISOString().slice(0,7));
+  }
+  return months;
+}
+
+function getRepKpiActual(repId, month) {
+  const newContact = clients.filter(c=>c.stage==='active_contact'&&
+    actions.some(a=>a.clientId===c.id&&a.rep===repId&&(a.type==='訪問'||a.type==='提案')&&a.date.startsWith(month))
+  ).length;
+  const proposal = actions.filter(a=>a.rep===repId&&a.type==='提案'&&a.date.startsWith(month)).length;
+  const win = clients.filter(c=>c.stage==='existing'&&c.assignee===repId&&(c.createdAt||'').startsWith(month)).length;
+  return {newContact, proposal, win};
+}
+
+function getTeamKpiActual(month) {
+  let nc=0, pr=0, wn=0;
+  REPS.forEach(r => { const a=getRepKpiActual(r.id,month); nc+=a.newContact; pr+=a.proposal; wn+=a.win; });
+  return {newContact:nc, proposal:pr, win:wn};
+}
+
+function getBudgetForMonth(month) {
+  return budgetTargets.find(b=>b.month===month)?.budget || null;
+}
+
+function getKpiTarget(repId, month) {
+  return kpiTargets.find(t=>t.repId===repId&&t.month===month) || {newContact:null,proposal:null,win:null};
+}
+
+function gaugeColor(pct) {
+  if(pct>=100) return 'var(--green)';
+  if(pct>=70) return 'var(--amber)';
+  return 'var(--red)';
+}
+
+function gaugeHTML(actual, goal, label, color) {
+  const pct = goal>0 ? Math.min(Math.round(actual/goal*100),120) : null;
+  const gc = pct!==null ? gaugeColor(pct) : 'var(--border2)';
+  return `<div style="margin-bottom:9px">
+    <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+      <span style="color:var(--t2)">${label}</span>
+      <span style="font-family:var(--mono);font-weight:600;color:${gc}">${actual}<span style="color:var(--t3);font-weight:400"> / ${goal!==null?goal:'—'}</span>${pct!==null?` <span style="font-size:10px">(${pct}%)</span>`:''}</span>
+    </div>
+    <div class="kpi-gauge-wrap">
+      <div class="kpi-gauge-fill" style="width:${pct!==null?Math.min(pct,100):0}%;background:${gc}"></div>
+    </div>
+  </div>`;
+}
+
+function renderKpiPage() {
+  const months = getKpiMonths();
+  // Month tabs
+  const tabCon = document.getElementById('kpi-month-tabs');
+  if(tabCon) {
+    tabCon.innerHTML = months.map(m=>`<button class="kpi-month-tab ${m===kpiSelectedMonth?'active':''}" onclick="kpiSelectMonth('${m}')">${m.slice(0,4)}年${parseInt(m.slice(5))}月</button>`).join('');
+  }
+
+  const month = kpiSelectedMonth;
+  const teamAct = getTeamKpiActual(month);
+  const teamTargetNC = kpiTargets.filter(t=>t.month===month).reduce((s,t)=>s+(t.newContact||0),0);
+  const teamTargetPR = kpiTargets.filter(t=>t.month===month).reduce((s,t)=>s+(t.proposal||0),0);
+  const teamTargetWN = kpiTargets.filter(t=>t.month===month).reduce((s,t)=>s+(t.win||0),0);
+  const budget = getBudgetForMonth(month);
+  const actualCost = jobs.filter(j=>(j.start||'').startsWith(month)).reduce((s,j)=>s+Number(j.cost||0),0);
+
+  // Summary KPI cards
+  const ncPct = teamTargetNC>0?Math.round(teamAct.newContact/teamTargetNC*100):null;
+  document.getElementById('kpi-nc-goal').textContent = teamTargetNC || '—';
+  document.getElementById('kpi-nc-act').textContent = `実績 ${teamAct.newContact}${ncPct!==null?' ('+ncPct+'%)':''}`;
+  document.getElementById('kpi-nc-goal').parentElement.style.setProperty('--ca', ncPct>=100?'var(--green)':ncPct>=70?'var(--amber)':'var(--accent)');
+
+  document.getElementById('kpi-pr-goal').textContent = teamTargetPR || '—';
+  document.getElementById('kpi-pr-act').textContent = `実績 ${teamAct.proposal}`;
+
+  document.getElementById('kpi-wn-goal').textContent = teamTargetWN || '—';
+  document.getElementById('kpi-wn-act').textContent = `実績 ${teamAct.win}`;
+
+  document.getElementById('kpi-bd-goal').textContent = budget ? '¥'+(budget/10000).toFixed(0)+'万' : '—';
+  const bdPct = budget>0?Math.round(actualCost/budget*100):null;
+  document.getElementById('kpi-bd-act').textContent = `実績 ¥${(actualCost/10000).toFixed(0)}万${bdPct!==null?' ('+bdPct+'%)':''}`;
+  document.getElementById('kpi-bd-goal').parentElement.style.setProperty('--ca', bdPct!==null&&bdPct>=100?'var(--red)':bdPct>=80?'var(--amber)':'var(--purple)');
+
+  document.getElementById('kpi-team-rate').textContent = ncPct!==null ? ncPct+'%' : '—';
+
+  // Rep cards
+  const cardsCon = document.getElementById('kpi-rep-cards');
+  if(cardsCon) {
+    cardsCon.innerHTML = REPS.map(r => {
+      const act = getRepKpiActual(r.id, month);
+      const tgt = getKpiTarget(r.id, month);
+      const ncP = tgt.newContact>0?Math.round(act.newContact/tgt.newContact*100):null;
+      const overallColor = ncP===null?'var(--border2)':ncP>=100?'var(--green)':ncP>=70?'var(--amber)':'var(--red)';
+      return `<div class="kpi-rep-card">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px">
+          <div class="av" style="${avStyle(r.id)};width:34px;height:34px;font-size:12px">${r.short.charAt(0)}</div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:13px">${r.name}</div>
+            <div style="font-size:10px;color:var(--t2)">${month.slice(0,4)}年${parseInt(month.slice(5))}月</div>
+          </div>
+          ${ncP!==null?`<div style="font-family:var(--disp);font-size:18px;font-weight:800;color:${overallColor}">${ncP}%</div>`:'<div style="font-size:11px;color:var(--t3)">目標未設定</div>'}
+        </div>
+        ${gaugeHTML(act.newContact, tgt.newContact, '🤝 新規接触', 'var(--accent)')}
+        ${gaugeHTML(act.proposal, tgt.proposal, '📄 提案', 'var(--amber)')}
+        ${gaugeHTML(act.win, tgt.win, '✅ 既存化', 'var(--green)')}
+      </div>`;
+    }).join('');
+  }
+
+  // Trend table
+  const trendCon = document.getElementById('kpi-trend-table');
+  if(trendCon) {
+    const cols = months;
+    trendCon.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:11px;min-width:600px">
+      <thead><tr style="background:var(--s2)">
+        <th style="padding:7px 10px;text-align:left;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border)">指標</th>
+        ${cols.map(m=>`<th style="padding:7px 10px;text-align:center;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border);${m===kpiSelectedMonth?'color:var(--accent);font-weight:700':''}">${m.slice(0,4)}/${parseInt(m.slice(5))}</th>`).join('')}
+      </tr></thead>
+      <tbody>
+        ${[
+          {label:'🤝 新規接触', key:'newContact', color:'var(--accent)'},
+          {label:'📄 提案', key:'proposal', color:'var(--amber)'},
+          {label:'✅ 既存化', key:'win', color:'var(--green)'},
+        ].map(row => {
+          const acts = cols.map(m=>getTeamKpiActual(m)[row.key]);
+          const tgts = cols.map(m=>kpiTargets.filter(t=>t.month===m).reduce((s,t)=>s+(t[row.key]||0),0));
+          return `<tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:6px 10px;font-weight:600;color:${row.color}">${row.label}</td>
+            ${cols.map((m,i)=>{
+              const a=acts[i], g=tgts[i];
+              const p=g>0?Math.round(a/g*100):null;
+              const c=p===null?'var(--t3)':p>=100?'var(--green)':p>=70?'var(--amber)':'var(--red)';
+              return `<td style="padding:6px 10px;text-align:center;${m===kpiSelectedMonth?'background:var(--acl)':''}">
+                <div style="font-family:var(--mono);font-weight:700;font-size:13px;color:${c}">${a}</div>
+                <div style="font-size:9px;color:var(--t3)">/ ${g||'—'}${p!==null?` (${p}%)`:''}</div>
+              </td>`;
+            }).join('')}
+          </tr>`;
+        }).join('')}
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:6px 10px;font-weight:600;color:var(--purple)">💰 媒体費用</td>
+          ${cols.map((m,i)=>{
+            const act=jobs.filter(j=>(j.start||'').startsWith(m)).reduce((s,j)=>s+Number(j.cost||0),0);
+            const bgt=getBudgetForMonth(m);
+            const p=bgt>0?Math.round(act/bgt*100):null;
+            const c=p===null?'var(--t3)':p>=100?'var(--red)':p>=80?'var(--amber)':'var(--green)';
+            return `<td style="padding:6px 10px;text-align:center;${m===kpiSelectedMonth?'background:var(--acl)':''}">
+              <div style="font-family:var(--mono);font-weight:700;font-size:12px;color:${c}">¥${(act/10000).toFixed(0)}万</div>
+              <div style="font-size:9px;color:var(--t3)">/ ${bgt?'¥'+(bgt/10000).toFixed(0)+'万':'—'}${p!==null?` (${p}%)`:''}</div>
+            </td>`;
+          }).join('')}
+        </tr>
+      </tbody>
+    </table>`;
+  }
+}
+
+function kpiSelectMonth(m) {
+  kpiSelectedMonth = m;
+  renderKpiPage();
+}
+
+// ── KPI MODAL ──
+function openKpiModal() {
+  const months = getKpiMonths();
+  const sel = document.getElementById('kpi-m-month');
+  if(!sel) return;
+  sel.innerHTML = months.map(m=>`<option value="${m}" ${m===kpiSelectedMonth?'selected':''}>${m.slice(0,4)}年${parseInt(m.slice(5))}月</option>`).join('');
+  renderKpiModalRows();
+  document.getElementById('kpi-modal').classList.add('open');
+}
+function closeKpiModal() { document.getElementById('kpi-modal').classList.remove('open'); }
+
+function renderKpiModalRows() {
+  const month = document.getElementById('kpi-m-month').value;
+  const tbody = document.getElementById('kpi-modal-rows');
+  if(!tbody) return;
+  tbody.innerHTML = REPS.map(r => {
+    const tgt = getKpiTarget(r.id, month);
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:8px 12px;font-weight:500;font-size:12px">
+        <div style="display:flex;align-items:center;gap:7px">
+          <div class="av" style="${avStyle(r.id)};width:24px;height:24px;font-size:10px">${r.short.charAt(0)}</div>
+          ${r.name}
+        </div>
+      </td>
+      <td style="padding:8px 12px;text-align:center">
+        <input type="number" min="0" style="width:70px;padding:5px 7px;border:1px solid var(--border);border-radius:6px;text-align:center;font-family:var(--mono);font-size:12px"
+          id="kpi-inp-${r.id}-nc" value="${tgt.newContact||''}" placeholder="—">
+      </td>
+      <td style="padding:8px 12px;text-align:center">
+        <input type="number" min="0" style="width:70px;padding:5px 7px;border:1px solid var(--border);border-radius:6px;text-align:center;font-family:var(--mono);font-size:12px"
+          id="kpi-inp-${r.id}-pr" value="${tgt.proposal||''}" placeholder="—">
+      </td>
+      <td style="padding:8px 12px;text-align:center">
+        <input type="number" min="0" style="width:70px;padding:5px 7px;border:1px solid var(--border);border-radius:6px;text-align:center;font-family:var(--mono);font-size:12px"
+          id="kpi-inp-${r.id}-wn" value="${tgt.win||''}" placeholder="—">
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function saveKpiTargets() {
+  const month = document.getElementById('kpi-m-month').value;
+  REPS.forEach(r => {
+    const nc = parseInt(document.getElementById(`kpi-inp-${r.id}-nc`)?.value)||0;
+    const pr = parseInt(document.getElementById(`kpi-inp-${r.id}-pr`)?.value)||0;
+    const wn = parseInt(document.getElementById(`kpi-inp-${r.id}-wn`)?.value)||0;
+    const idx = kpiTargets.findIndex(t=>t.repId===r.id&&t.month===month);
+    if(idx>=0) kpiTargets[idx] = {...kpiTargets[idx], newContact:nc, proposal:pr, win:wn};
+    else kpiTargets.push({month, repId:r.id, newContact:nc, proposal:pr, win:wn});
+  });
+  closeKpiModal();
+  kpiSelectedMonth = month;
+  renderKpiPage();
+}
+
+// ── BUDGET MODAL ──
+function openBudgetModal() {
+  const months = getKpiMonths();
+  const con = document.getElementById('budget-rows');
+  if(!con) return;
+  con.innerHTML = months.map(m => {
+    const bgt = getBudgetForMonth(m);
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:12px;font-weight:500;min-width:100px">${m.slice(0,4)}年${parseInt(m.slice(5))}月</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:11px;color:var(--t2)">¥</span>
+        <input type="number" min="0" step="10000"
+          style="width:120px;padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:12px;text-align:right"
+          id="bgt-inp-${m}" value="${bgt||''}" placeholder="未設定">
+        <span style="font-size:10px;color:var(--t2)">円</span>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('budget-modal').classList.add('open');
+}
+function closeBudgetModal() { document.getElementById('budget-modal').classList.remove('open'); }
+
+function saveBudgetTargets() {
+  const months = getKpiMonths();
+  months.forEach(m => {
+    const val = parseInt(document.getElementById(`bgt-inp-${m}`)?.value)||0;
+    const idx = budgetTargets.findIndex(b=>b.month===m);
+    if(idx>=0) budgetTargets[idx].budget = val;
+    else if(val>0) budgetTargets.push({month:m, budget:val});
+  });
+  closeBudgetModal();
+  if(currentPage==='kpi') renderKpiPage();
+}
+
+// ============================================================
+// SETTINGS MODULE
+// ============================================================
+function renderSettings(){
+  // --- Reps ---
+  const rl=document.getElementById('set-reps-list');
+  if(rl) rl.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead><tr style="background:var(--s2)">
+      <th style="padding:6px 10px;text-align:left;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border)">ID</th>
+      <th style="padding:6px 10px;text-align:left;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border)">氏名</th>
+      <th style="padding:6px 10px;text-align:left;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border)">略称</th>
+      <th style="padding:6px 10px;border-bottom:1px solid var(--border)"></th>
+    </tr></thead><tbody>
+    ${REPS.map(r=>`<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:6px 10px;font-family:var(--mono)">${r.id}</td>
+      <td style="padding:6px 10px">${r.name}</td>
+      <td style="padding:6px 10px"><span class="bdg b-bl">${r.short}</span></td>
+      <td style="padding:6px 10px;text-align:right"><button class="btn bd bxs" onclick="removeRep('${r.id}')">削除</button></td>
+    </tr>`).join('')}
+    </tbody></table>`;
+
+  // --- Areas ---
+  const al=document.getElementById('set-areas-list');
+  if(al) al.innerHTML=AREAS_MASTER.map(a=>`
+    <span style="display:inline-flex;align-items:center;gap:3px;background:var(--acl);color:var(--accent);border:1px solid #bfdbfe;border-radius:20px;padding:2px 9px;font-size:11px">
+      ${a}<button onclick="removeArea('${a}')" style="background:none;border:none;cursor:pointer;color:var(--t3);font-size:10px;padding:0 0 0 2px">✕</button>
+    </span>`).join('');
+
+  // --- Media ---
+  const ml=document.getElementById('set-media-list');
+  if(ml) ml.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead><tr style="background:var(--s2)">
+      <th style="padding:6px 10px;text-align:left;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border)">ID</th>
+      <th style="padding:6px 10px;text-align:left;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border)">媒体名</th>
+      <th style="padding:6px 10px;border-bottom:1px solid var(--border)"></th>
+    </tr></thead><tbody>
+    ${MEDIA_LIST.map(m=>`<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:6px 10px;font-family:var(--mono)">${m.id}</td>
+      <td style="padding:6px 10px">${m.name}</td>
+      <td style="padding:6px 10px;text-align:right"><button class="btn bd bxs" onclick="removeMedia('${m.id}')">削除</button></td>
+    </tr>`).join('')}
+    </tbody></table>`;
+
+  // --- Industries ---
+  const il=document.getElementById('set-ind-list');
+  if(il) il.innerHTML=INDUSTRIES.map(ind=>`
+    <span style="display:inline-flex;align-items:center;gap:3px;background:var(--grl);color:var(--gray);border:1px solid #e5e7eb;border-radius:20px;padding:2px 9px;font-size:11px">
+      ${ind}<button onclick="removeIndustry('${ind}')" style="background:none;border:none;cursor:pointer;color:var(--t3);font-size:10px;padding:0 0 0 2px">✕</button>
+    </span>`).join('');
+}
+
+function addRep(){
+  const id=document.getElementById('set-rep-id').value.trim().toLowerCase().replace(/\s/g,'');
+  const name=document.getElementById('set-rep-name').value.trim();
+  const short=document.getElementById('set-rep-short').value.trim();
+  if(!id||!name||!short){alert('ID・氏名・略称をすべて入力してください');return;}
+  if(REPS.find(r=>r.id===id)){alert('そのIDはすでに使われています');return;}
+  REPS.push({id,name,short});
+  document.getElementById('set-rep-id').value='';
+  document.getElementById('set-rep-name').value='';
+  document.getElementById('set-rep-short').value='';
+  populateSelects();buildRepTabs();renderSettings();
+}
+function removeRep(id){
+  if(REPS.length<=1){alert('担当者は1人以上必要です');return;}
+  if(!confirm(`担当者「${repShort(id)}」を削除しますか？`))return;
+  REPS=REPS.filter(r=>r.id!==id);
+  populateSelects();buildRepTabs();renderSettings();
+}
+
+function addArea(){
+  const val=document.getElementById('set-area-val').value.trim();
+  if(!val)return;
+  if(!AREAS_MASTER.includes(val)) AREAS_MASTER.push(val);
+  document.getElementById('set-area-val').value='';
+  populateSelects();renderSettings();
+}
+function removeArea(val){
+  AREAS_MASTER=AREAS_MASTER.filter(a=>a!==val);
+  populateSelects();renderSettings();
+}
+
+function addMedia(){
+  const id=document.getElementById('set-med-id').value.trim().toLowerCase().replace(/\s/g,'');
+  const name=document.getElementById('set-med-name').value.trim();
+  if(!id||!name){alert('IDと媒体名を入力してください');return;}
+  if(MEDIA_LIST.find(m=>m.id===id)){alert('そのIDはすでに使われています');return;}
+  MEDIA_LIST.push({id,name,color:'var(--gray)'});
+  document.getElementById('set-med-id').value='';
+  document.getElementById('set-med-name').value='';
+  renderSettings();
+}
+function removeMedia(id){
+  if(!confirm(`媒体「${mediaName(id)}」を削除しますか？`))return;
+  MEDIA_LIST=MEDIA_LIST.filter(m=>m.id!==id);
+  renderSettings();
+}
+
+function addIndustry(){
+  const val=document.getElementById('set-ind-val').value.trim();
+  if(!val)return;
+  if(!INDUSTRIES.includes(val)) INDUSTRIES.push(val);
+  document.getElementById('set-ind-val').value='';
+  populateSelects();renderSettings();
+}
+function removeIndustry(val){
+  INDUSTRIES=INDUSTRIES.filter(i=>i!==val);
+  populateSelects();renderSettings();
+}
+
+// Attach overlay click-to-close after all DOM elements are available
+document.addEventListener('DOMContentLoaded',()=>{
+  [
+    ['client-modal',  ()=>closeModal()],
+    ['cp-modal',      ()=>closeCP()],
+    ['mini-modal',    ()=>closeMini()],
+    ['monthly-modal', ()=>closeMonthlyInput()],
+    ['job-modal',     ()=>closeJobModal()],
+    ['kpi-modal',     ()=>closeKpiModal()],
+    ['budget-modal',  ()=>closeBudgetModal()],
+  ].forEach(([id,fn])=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('click',e=>{if(e.target===e.currentTarget)fn();});
+  });
+});
+</script>
+<!-- MONTHLY INPUT MODAL -->
+<div class="mo" id="monthly-modal">
+  <div class="modal" style="width:640px">
+    <div class="mh">
+      <div>
+        <div class="mt">📥 月次実績入力</div>
+        <div style="font-size:10px;color:var(--t2);margin-top:2px">応募数・採用数・ステータスをまとめて更新（入力値は累計）</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <select class="fs" id="mn-month" style="font-size:11px"></select>
+        <button class="mcl" onclick="closeMonthlyInput()">✕</button>
+      </div>
+    </div>
+    <div class="mb" style="padding:0">
+      <div style="padding:10px 22px;background:var(--s2);border-bottom:1px solid var(--border);font-size:11px;color:var(--t2)">
+        📌 応募数・採用数は累計値を入力してください。空欄はスキップされます。
+      </div>
+      <div id="mn-rows" style="max-height:420px;overflow-y:auto"></div>
+    </div>
+    <div class="mf">
+      <button class="btn bg_" onclick="closeMonthlyInput()">キャンセル</button>
+      <button class="btn bp" onclick="saveMonthlyInput()">✅ 保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- JOB MODAL -->
+<div class="mo" id="job-modal">
+  <div class="modal" style="width:580px">
+    <div class="mh"><div class="mt" id="job-modal-title">求人を追加</div><button class="mcl" onclick="closeJobModal()">✕</button></div>
+    <div class="mb">
+      <div class="fg2">
+        <div class="fg ff">
+          <label>顧客（既存顧客から選択）*</label>
+          <select id="jf-client" onchange="onJobClientChange()">
+            <option value="">選択してください</option>
+          </select>
+        </div>
+        <div class="fg ff"><label>職種・求人タイトル *</label><input id="jf-title" type="text" placeholder="例：倉庫作業員（フォークリフト）大阪堺市"></div>
+        <div class="fg"><label>媒体</label><select id="jf-media"></select></div>
+        <div class="fg"><label>ステータス</label>
+          <select id="jf-status">
+            <option value="active">掲載中</option>
+            <option value="draft">下書き</option>
+            <option value="closed">掲載終了</option>
+          </select>
+        </div>
+        <div class="fg"><label>掲載開始日</label><input id="jf-start" type="date"></div>
+        <div class="fg"><label>掲載終了日</label><input id="jf-end" type="date"></div>
+        <div class="fg"><label>掲載費用（円）</label><input id="jf-cost" type="number" placeholder="0" min="0" step="1000"></div>
+        <div class="fg"><label>採用目標人数</label><input id="jf-target" type="number" placeholder="1" min="1"></div>
+        <div class="fg"><label>応募数</label><input id="jf-apps" type="number" placeholder="0" min="0"></div>
+        <div class="fg"><label>採用数（確定後に入力）</label><input id="jf-hired" type="number" placeholder="0" min="0"></div>
+        <div class="fg"><label>稼働人数（現在）</label><input id="jf-workers" type="number" placeholder="0" min="0"></div>
+        <div class="fg ff"><label>コボット 求人ID（連携用・任意）</label>
+          <div style="display:flex;gap:7px;align-items:center">
+            <input id="jf-kobot" type="text" placeholder="コボットの求人IDを入力（将来API連携予定）" style="flex:1">
+            <span class="bdg b-gy" style="white-space:nowrap">将来対応</span>
+          </div>
+        </div>
+        <div class="fg ff"><label>備考</label><textarea id="jf-note" rows="2" placeholder="掲載条件・特記事項など"></textarea></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bg_" onclick="closeJobModal()">キャンセル</button><button class="btn bp" onclick="saveJob()">保存</button></div>
+  </div>
+</div>
+
+<!-- KPI TARGET MODAL -->
+<div class="mo" id="kpi-modal">
+  <div class="modal" style="width:640px">
+    <div class="mh">
+      <div>
+        <div class="mt">🎯 月次目標設定</div>
+        <div style="font-size:10px;color:var(--t2);margin-top:2px">担当者ごとに月次KPI目標を設定します</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <select class="fs" id="kpi-m-month" style="font-size:11px" onchange="renderKpiModalRows()"></select>
+        <button class="mcl" onclick="closeKpiModal()">✕</button>
+      </div>
+    </div>
+    <div class="mb" style="padding:0">
+      <div style="padding:8px 22px;background:var(--s2);border-bottom:1px solid var(--border);font-size:11px;color:var(--t2)">
+        数値を入力して保存してください。空欄のままにすると目標未設定（—）になります。
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:var(--s2)">
+            <th style="padding:8px 12px;text-align:left;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border)">担当</th>
+            <th style="padding:8px 12px;text-align:center;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border)">🤝 新規接触 目標</th>
+            <th style="padding:8px 12px;text-align:center;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border)">📄 提案 目標</th>
+            <th style="padding:8px 12px;text-align:center;font-size:10px;color:var(--t2);border-bottom:1px solid var(--border)">✅ 既存化 目標</th>
+          </tr>
+        </thead>
+        <tbody id="kpi-modal-rows"></tbody>
+      </table>
+    </div>
+    <div class="mf">
+      <button class="btn bg_" onclick="closeKpiModal()">キャンセル</button>
+      <button class="btn bp" onclick="saveKpiTargets()">✅ 保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- BUDGET MODAL -->
+<div class="mo" id="budget-modal">
+  <div class="modal" style="width:480px">
+    <div class="mh">
+      <div><div class="mt">💰 媒体費用 予算設定</div></div>
+      <button class="mcl" onclick="closeBudgetModal()">✕</button>
+    </div>
+    <div class="mb">
+      <div style="font-size:11px;color:var(--t2);margin-bottom:14px">月ごとの媒体掲載費用の予算上限を設定します。</div>
+      <div id="budget-rows" style="display:flex;flex-direction:column;gap:9px"></div>
+    </div>
+    <div class="mf">
+      <button class="btn bg_" onclick="closeBudgetModal()">キャンセル</button>
+      <button class="btn bp" onclick="saveBudgetTargets()">✅ 保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- DB SETUP MODAL -->
+<div class="db-setup" id="db-setup" style="display:none">
+  <div class="db-setup-box">
+    <div class="db-setup-head">
+      <div class="db-setup-title">🔗 Supabase 接続設定</div>
+      <div class="db-setup-sub">無料でリアルタイム共有が可能になります。supabase.com で Project URL と anon key を取得してください。</div>
+    </div>
+    <div class="db-setup-body">
+      <div class="db-ig">
+        <label>Project URL</label>
+        <input id="sb-url" type="text" placeholder="https://xxxxxxxxxxxx.supabase.co">
+      </div>
+      <div class="db-ig">
+        <label>anon public key</label>
+        <input id="sb-key" type="text" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+      </div>
+
+      <div style="margin-bottom:10px">
+        <div style="font-size:10px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px">① Supabase SQL Editor で実行するSQL</div>
+        <div class="sql-box">-- クライアントテーブル
+create table if not exists clients (
+  id text primary key,
+  kind text not null,
+  company text not null,
+  industry text, scale text, branches text,
+  contact text, ctitle text, phone text,
+  email text, area text, addr text, web text,
+  assignee text, stage text, memo text,
+  created_at text
+);
+
+-- アクションテーブル
+create table if not exists actions (
+  id text primary key,
+  client_id text references clients(id) on delete cascade,
+  type text, note text, rep text, date text
+);
+
+-- リアルタイム有効化
+alter publication supabase_realtime add table clients;
+alter publication supabase_realtime add table actions;</div>
+        <button class="btn bg_ bsm" onclick="copySQL()" style="float:right;margin-top:-6px">📋 SQLをコピー</button>
+        <div style="clear:both"></div>
+      </div>
+
+      <div style="background:var(--s2);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--t2);line-height:1.6">
+        <strong>手順：</strong><br>
+        1. supabase.com → 無料アカウント作成<br>
+        2. New Project → リージョン「Northeast Asia (Tokyo)」<br>
+        3. 左メニュー「SQL Editor」→ 上のSQLを貼り付けて実行<br>
+        4. 「Settings → API」から URL と anon key をコピーして上に入力<br>
+        5. 「接続テスト」→ 成功したら「保存して接続」
+      </div>
+    </div>
+    <div class="db-setup-foot">
+      <div class="db-status" id="db-status-msg">未接続（ローカルモードで動作中）</div>
+      <div style="display:flex;gap:7px">
+        <button class="btn bg_ bsm" onclick="testConnection()">接続テスト</button>
+        <button class="btn bp bsm" onclick="saveAndConnect()">保存して接続</button>
+        <button class="btn bg_ bsm" onclick="closeDBSetup()">閉じる</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
