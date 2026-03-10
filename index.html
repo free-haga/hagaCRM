@@ -2192,9 +2192,10 @@ let sb = null;  // Supabase client
 let isLive = false;
 let realtimeSub = null;
 
-const SB_URL_KEY = 'hirecrm_sb_url';
+const SB_URL_KEY = '';
 const SB_KEY_KEY = 'hirecrm_sb_key';
-
+localStorage.setItem('', 'https://rmrijxnspfmgcrdouoir.supabase.co');
+localStorage.setItem('hirecrm_sb_key', 'sb_publishable_xXPDucQIQF8_LxU3qrrU1Q_u_UskUVi');
 function initSupabase(url, key) {
   try {
     sb = supabase.createClient(url, key);
